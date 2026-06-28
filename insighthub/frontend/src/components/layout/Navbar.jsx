@@ -5,6 +5,8 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useSocketContext } from '../../context/SocketContext.jsx';
 import { ROUTES } from '../../constants/routes.js';
 import { clearBreakingAlerts } from '../../store/newsSlice.js';
+import ThemeToggle from '../ui/ThemeToggle.jsx';
+import LanguagePicker from '../ui/LanguagePicker.jsx';
 import { cn } from '../../utils/cn.js';
 
 function Navbar() {
@@ -28,18 +30,20 @@ function Navbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-md dark:border-slate-900 dark:bg-slate-950/80">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         <div className="flex items-center gap-6">
-          <NavLink to={ROUTES.FEED} className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-white">
+          <NavLink to={ROUTES.HOME} className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             <span className="bg-gradient-to-r from-sky-400 to-indigo-500 bg-clip-text text-transparent">Insight</span>
             <span className="rounded bg-sky-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-sky-400 border border-sky-500/20">HUB</span>
           </NavLink>
           {isAuthenticated && (
             <span
               className={cn(
-                'hidden items-center gap-1.5 rounded-full bg-slate-900/50 border border-slate-800 px-3 py-1 text-xs transition duration-250 sm:flex',
-                connected ? 'text-emerald-400 border-emerald-500/20' : 'text-slate-500'
+                'hidden items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition duration-250 sm:flex',
+                connected
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-slate-900/50 dark:text-emerald-400'
+                  : 'border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-900/50',
               )}
             >
               <span
@@ -49,13 +53,15 @@ function Navbar() {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <LanguagePicker compact className="max-w-[9.5rem] shrink-0 overflow-x-auto sm:max-w-none" />
+          <ThemeToggle />
           {isAuthenticated && (
             <div className="relative" ref={notificationRef}>
               <button
                 type="button"
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative rounded-lg border border-slate-800 bg-slate-900/40 p-2 text-slate-400 transition hover:bg-slate-900 hover:text-white"
+                className="relative rounded-lg border border-slate-200 bg-slate-50 p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
@@ -70,9 +76,11 @@ function Navbar() {
 
               {/* Notification Panel */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2.5 w-80 rounded-xl border border-slate-800 bg-slate-950 p-4 shadow-2xl backdrop-blur-xl">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Breaking Alerts</h3>
+                <div className="absolute right-0 mt-2.5 w-80 rounded-xl border border-slate-200 bg-white p-4 shadow-2xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950">
+                  <div className="mb-3 flex items-center justify-between border-b border-slate-200 pb-2 dark:border-slate-800">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Breaking Alerts
+                    </h3>
                     {breakingAlerts.length > 0 && (
                       <button
                         onClick={() => dispatch(clearBreakingAlerts())}
@@ -89,19 +97,22 @@ function Navbar() {
                       </div>
                     ) : (
                       breakingAlerts.map((alert, idx) => (
-                        <div key={idx} className="rounded-lg bg-slate-900/50 border border-slate-800/40 p-2.5 space-y-1">
-                          <div className="flex justify-between items-start gap-1">
-                            <span className="rounded bg-red-500/10 px-1 py-0.2 text-[9px] font-bold uppercase text-red-400 border border-red-500/15">
+                        <div
+                          key={idx}
+                          className="space-y-1 rounded-lg border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-800/40 dark:bg-slate-900/50"
+                        >
+                          <div className="flex items-start justify-between gap-1">
+                            <span className="rounded border border-red-200 bg-red-50 px-1 py-0.5 text-[9px] font-bold uppercase text-red-600 dark:border-red-500/15 dark:bg-red-500/10 dark:text-red-400">
                               BREAKING
                             </span>
                             <span className="text-[9px] text-slate-500">
                               {new Date(alert.article.publishedAt).toLocaleTimeString()}
                             </span>
                           </div>
-                          <p className="text-xs font-semibold text-slate-200 line-clamp-2">
+                          <p className="line-clamp-2 text-xs font-semibold text-slate-800 dark:text-slate-200">
                             {alert.article.title}
                           </p>
-                          <p className="text-[10px] text-slate-400 italic">
+                          <p className="text-[10px] italic text-slate-500 dark:text-slate-400">
                             Reason: {alert.reason}
                           </p>
                         </div>
@@ -116,15 +127,15 @@ function Navbar() {
           {isAuthenticated ? (
             <>
               <NavLink
-                to={ROUTES.PREFERENCES}
-                className="hidden text-sm font-semibold text-slate-400 hover:text-white sm:block"
+                to={ROUTES.PROFILE}
+                className="hidden text-sm font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white sm:block"
               >
                 {user?.name}
               </NavLink>
               <button
                 type="button"
                 onClick={logout}
-                className="rounded-lg border border-slate-800 bg-slate-900/30 px-3.5 py-1.5 text-xs font-semibold text-slate-350 transition hover:bg-slate-900 hover:text-white"
+                className="rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
               >
                 Logout
               </button>

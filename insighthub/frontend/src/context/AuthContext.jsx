@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout, loadProfile } from '../store/authSlice.js';
+import { queryClient } from '../lib/queryClient.js';
 
 const AuthContext = createContext(null);
 
@@ -15,7 +16,10 @@ export function AuthProvider({ children }) {
       loading,
       error,
       isAuthenticated: Boolean(token),
-      logout: () => dispatch(logout()),
+      logout: () => {
+        queryClient.clear();
+        dispatch(logout());
+      },
       refreshProfile: () => dispatch(loadProfile()),
     }),
     [user, token, loading, error, dispatch],

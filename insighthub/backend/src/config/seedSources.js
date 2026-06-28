@@ -10,6 +10,7 @@ const DEFAULT_SOURCES = [
     baseUrl: 'https://newsapi.org/v2',
     cronExpression: env.pollIntervals.newsapi,
     pollingIntervalMinutes: 15,
+    metadata: { country: env.newsCountry },
   },
   {
     name: 'GNews',
@@ -18,6 +19,7 @@ const DEFAULT_SOURCES = [
     baseUrl: 'https://gnews.io/api/v4',
     cronExpression: env.pollIntervals.gnews,
     pollingIntervalMinutes: 20,
+    metadata: { country: env.newsCountry, lang: env.newsLang },
   },
   {
     name: 'The Guardian',
@@ -26,6 +28,7 @@ const DEFAULT_SOURCES = [
     baseUrl: 'https://content.guardianapis.com',
     cronExpression: env.pollIntervals.guardian,
     pollingIntervalMinutes: 10,
+    metadata: { section: env.guardianSection },
   },
   {
     name: 'The New York Times',
@@ -34,22 +37,47 @@ const DEFAULT_SOURCES = [
     baseUrl: 'https://api.nytimes.com/svc/topstories/v2',
     cronExpression: env.pollIntervals.nyt,
     pollingIntervalMinutes: 30,
+    metadata: { section: env.nytSection },
+  },
+  {
+    name: 'Currents API',
+    slug: 'currents',
+    type: 'currents',
+    baseUrl: 'https://api.currentsapi.services/v1',
+    cronExpression: env.pollIntervals.currents,
+    pollingIntervalMinutes: 20,
+    metadata: { country: env.newsCountry.toUpperCase(), lang: env.newsLang },
   },
 ];
 
-function buildRssSources() {
-  const defaultFeeds = [
-    { name: 'BBC News', slug: 'rss-bbc', feedUrl: 'https://feeds.bbci.co.uk/news/rss.xml' },
-    { name: 'Reuters', slug: 'rss-reuters', feedUrl: 'https://feeds.reuters.com/reuters/topNews' },
-  ];
+const INDIAN_DEFAULT_FEEDS = [
+  {
+    name: 'The Hindu',
+    slug: 'rss-hindu',
+    feedUrl: 'https://www.thehindu.com/news/national/feeder/default.rss',
+  },
+  {
+    name: 'Indian Express',
+    slug: 'rss-indian-express',
+    feedUrl: 'https://indianexpress.com/section/india/feed/',
+  },
+  {
+    name: 'BBC India',
+    slug: 'rss-bbc-india',
+    feedUrl: 'https://feeds.bbci.co.uk/news/world/asia/india/rss.xml',
+  },
+];
 
+const LEGACY_FEED_SLUGS = ['rss-bbc', 'rss-reuters'];
+
+function buildRssSources() {
   const configuredFeeds = env.rssFeedUrls.map((feedUrl, index) => ({
     name: `RSS Feed ${index + 1}`,
     slug: `rss-feed-${index + 1}`,
     feedUrl,
   }));
 
-  const feeds = configuredFeeds.length > 0 ? configuredFeeds : defaultFeeds;
+  const feeds = configuredFeeds.length > 0 ? configuredFeeds : INDIAN_DEFAULT_FEEDS;
 
   return feeds.map((feed) => ({
     name: feed.name,
@@ -58,7 +86,8 @@ function buildRssSources() {
     baseUrl: feed.feedUrl,
     cronExpression: env.pollIntervals.rss,
     pollingIntervalMinutes: 25,
-    metadata: { feedUrl: feed.feedUrl },
+    status: 'active',
+    metadata: { feedUrl: feed.feedUrl, region: 'India' },
   }));
 }
 
@@ -72,7 +101,14 @@ export async function seedSources() {
     });
   }
 
-  logger.info(`Default sources seeded (${allSources.length} total)`);
+  await Source.updateMany(
+    { slug: { $in: LEGACY_FEED_SLUGS } },
+    { $set: { status: 'down', lastError: 'Replaced by India-focused RSS feeds' } },
+  );
+
+  logger.info(
+    `Default sources seeded (${allSources.length} total, country=${env.newsCountry})`,
+  );
 }
 
-export default { seedSources, DEFAULT_SOURCES };
+export default { seedSources, DEFAULT_SOURCES, INDIAN_DEFAULT_FEEDS };

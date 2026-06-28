@@ -9,20 +9,44 @@ const userSchema = new mongoose.Schema(
     preferences: {
       topics: { type: [String], default: [] },
       sources: { type: [String], default: [] },
-      occupation: { 
-        type: String, 
-        enum: ['Student', 'Software Engineer', 'Investor', 'Farmer', 'General'], 
-        default: 'General' 
+      occupation: {
+        type: String,
+        enum: [
+          'Student',
+          'Teacher',
+          'Government Employee',
+          'Software Engineer',
+          'Investor',
+          'Farmer',
+          'General',
+        ],
+        default: 'General',
       },
       state: { type: String, default: 'National' },
       district: { type: String, default: '' },
-      preferredLanguage: { 
-        type: String, 
-        enum: ['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Malayalam'], 
-        default: 'English' 
+      interests: { type: [String], default: [] },
+      preferredLanguage: {
+        type: String,
+        enum: ['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Malayalam'],
+        default: 'English',
       },
+      onboardingCompleted: { type: Boolean, default: false },
     },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    library: {
+      savedArticles: [
+        {
+          articleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Article' },
+          savedAt: { type: Date, default: Date.now },
+        },
+      ],
+      readingHistory: [
+        {
+          articleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Article' },
+          viewedAt: { type: Date, default: Date.now },
+        },
+      ],
+    },
   },
   { timestamps: true },
 );

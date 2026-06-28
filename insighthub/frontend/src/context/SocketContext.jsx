@@ -8,8 +8,12 @@ import {
   onTrendingUpdate,
   onBreakingNews,
   onSourceStatus,
+  onBriefUpdate,
 } from '../api/socket.js';
-import { addLiveArticle, addBreakingAlert, setTrendingArticles } from '../store/newsSlice.js';
+import { queryClient } from '../lib/queryClient.js';
+import { invalidateBriefQueries, invalidateNewsQueries } from '../lib/invalidateQueries.js';
+import { queryKeys } from '../constants/queryKeys.js';
+import { addLiveArticle, addBreakingAlert } from '../store/newsSlice.js';
 
 const SocketContext = createContext(null);
 
@@ -35,15 +39,21 @@ export function SocketProvider({ children }) {
 
     const unsubNews = onNewsUpdate(({ article }) => {
       dispatch(addLiveArticle(article));
+      invalidateNewsQueries();
     });
 
     const unsubTrending = onTrendingUpdate(({ articles }) => {
-      dispatch(setTrendingArticles(articles));
+      queryClient.setQueryData(queryKeys.trending.list(20), articles);
+      queryClient.setQueryData(queryKeys.trending.list(50), articles);
     });
 
     const unsubBreaking = onBreakingNews(({ article, reason }) => {
       dispatch(addBreakingAlert({ article, reason }));
       toast(`Breaking: ${article.title}`, { icon: '🔴', duration: 5000 });
+    });
+
+    const unsubBrief = onBriefUpdate(() => {
+      invalidateBriefQueries();
     });
 
     const unsubSource = onSourceStatus(({ source }) => {
@@ -58,6 +68,7 @@ export function SocketProvider({ children }) {
       unsubNews?.();
       unsubTrending?.();
       unsubBreaking?.();
+      unsubBrief?.();
       unsubSource?.();
       disconnectSocket();
       setConnected(false);

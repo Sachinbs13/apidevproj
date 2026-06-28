@@ -45,7 +45,7 @@ jobs:
       - name: Verify server imports
         run: node -e "import('./src/app.js').then(() => console.log('ok'))"
         env:
-          MONGODB_URI: mongodb://localhost:27017/insighthub-test
+          MONGODB_URI: mongodb+srv://sachinsachitha1321_db_user:<sachinbs13>@cluster0.wbkovxt.mongodb.net/?appName=Cluster0
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: ci-test-secret
 

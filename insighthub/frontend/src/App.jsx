@@ -1,19 +1,19 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import AppLayout from './components/layout/AppLayout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
-import Feed from './pages/Feed.jsx';
-import Search from './pages/Search.jsx';
-import Trending from './pages/Trending.jsx';
-import Compare from './pages/Compare.jsx';
-import Analytics from './pages/Analytics.jsx';
-import Alerts from './pages/Alerts.jsx';
-import Login from './pages/Login.jsx';
-import Preferences from './pages/Preferences.jsx';
-import MorningBriefPage from './pages/MorningBriefPage.jsx';
-import LocalIntelligence from './pages/LocalIntelligence.jsx';
-import SchemesIntelligence from './pages/SchemesIntelligence.jsx';
+import LoadingSpinner from './components/ui/LoadingSpinner.jsx';
 import { ROUTES } from './constants/routes.js';
+
+const Home = lazy(() => import('./pages/Home.jsx'));
+const ArticlePage = lazy(() => import('./pages/ArticlePage.jsx'));
+const Search = lazy(() => import('./pages/Search.jsx'));
+const Trending = lazy(() => import('./pages/Trending.jsx'));
+const Analytics = lazy(() => import('./pages/Analytics.jsx'));
+const Alerts = lazy(() => import('./pages/Alerts.jsx'));
+const Login = lazy(() => import('./pages/Login.jsx'));
+const Profile = lazy(() => import('./pages/Profile.jsx'));
 
 function App() {
   return (
@@ -21,31 +21,22 @@ function App() {
       <Toaster
         position="bottom-right"
         toastOptions={{
-          style: {
-            background: '#0f172a',
-            color: '#e2e8f0',
-            border: '1px solid #334155',
-          },
+          className: 'dark:!bg-slate-900 dark:!text-slate-100',
         }}
       />
-      <Routes>
-        <Route path={ROUTES.LOGIN} element={<Login />} />
-        <Route element={<AppLayout />}>
-          <Route path={ROUTES.FEED} element={<Feed />} />
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          <Route path={ROUTES.LOGIN} element={<Login />} />
+          <Route element={<AppLayout />}>
+          <Route path={ROUTES.HOME} element={<Home />} />
+          <Route path={ROUTES.ARTICLE} element={<ArticlePage />} />
           <Route path={ROUTES.SEARCH} element={<Search />} />
           <Route path={ROUTES.TRENDING} element={<Trending />} />
-          <Route path={ROUTES.COMPARE} element={<Compare />} />
           <Route path={ROUTES.ANALYTICS} element={<Analytics />} />
-          <Route path={ROUTES.LOCAL} element={<LocalIntelligence />} />
-          <Route path={ROUTES.SCHEMES} element={<SchemesIntelligence />} />
-          <Route
-            path={ROUTES.BRIEF}
-            element={
-              <ProtectedRoute>
-                <MorningBriefPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path={ROUTES.BRIEF} element={<Navigate to={ROUTES.HOME} replace />} />
+          <Route path={ROUTES.LOCAL} element={<Navigate to={`${ROUTES.HOME}?section=local`} replace />} />
+          <Route path={ROUTES.SCHEMES} element={<Navigate to={ROUTES.PROFILE} replace />} />
+          <Route path={ROUTES.COMPARE} element={<Navigate to={ROUTES.SEARCH} replace />} />
           <Route
             path={ROUTES.ALERTS}
             element={
@@ -54,17 +45,19 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path={ROUTES.PREFERENCES} element={<Navigate to={ROUTES.PROFILE} replace />} />
           <Route
-            path={ROUTES.PREFERENCES}
+            path={ROUTES.PROFILE}
             element={
               <ProtectedRoute>
-                <Preferences />
+                <Profile />
               </ProtectedRoute>
             }
           />
         </Route>
-        <Route path="*" element={<Navigate to={ROUTES.FEED} replace />} />
-      </Routes>
+        <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

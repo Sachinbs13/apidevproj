@@ -4,6 +4,7 @@ import {
   subscribeToTopic,
   unsubscribeFromTopic,
   subscribeToCategory,
+  unsubscribeFromCategory,
 } from '../api/socket.js';
 
 export function useSocket() {
@@ -16,6 +17,7 @@ export function useSocket() {
     subscribeToTopic,
     unsubscribeFromTopic,
     subscribeToCategory,
+    unsubscribeFromCategory,
   };
 }
 

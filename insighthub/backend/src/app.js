@@ -18,6 +18,7 @@ import briefRoutes from './routes/brief.routes.js';
 import schemeRoutes from './routes/scheme.routes.js';
 import regionRoutes from './routes/region.routes.js';
 import languageRoutes from './routes/language.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/brief', briefRoutes);
 app.use('/schemes', schemeRoutes);
 app.use('/regions', regionRoutes);
 app.use('/languages', languageRoutes);
+app.use('/user', userRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

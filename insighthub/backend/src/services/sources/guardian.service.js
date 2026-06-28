@@ -14,6 +14,7 @@ export async function fetchGuardianArticles() {
   const response = await axios.get(`${BASE_URL}/search`, {
     params: {
       'api-key': env.guardianApiKey,
+      section: env.guardianSection,
       'show-fields': 'bodyText,trailText,thumbnail,byline',
       'page-size': 50,
       orderBy: 'newest',

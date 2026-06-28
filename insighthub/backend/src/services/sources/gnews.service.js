@@ -14,7 +14,8 @@ export async function fetchGNewsArticles() {
   const response = await axios.get(`${BASE_URL}/top-headlines`, {
     params: {
       token: env.gnewsApiKey,
-      lang: 'en',
+      country: env.newsCountry,
+      lang: env.newsLang,
       max: 50,
     },
     timeout: 15000,

@@ -10,6 +10,7 @@ import { fetchNewsApiArticles } from './sources/newsapi.service.js';
 import { fetchGNewsArticles } from './sources/gnews.service.js';
 import { fetchGuardianArticles } from './sources/guardian.service.js';
 import { fetchNytArticles } from './sources/nyt.service.js';
+import { fetchCurrentsArticles } from './sources/currents.service.js';
 import { fetchRssArticles } from './sources/rss.service.js';
 import logger from '../utils/logger.js';
 
@@ -23,6 +24,8 @@ async function fetchArticlesForSource(source) {
       return fetchGuardianArticles();
     case 'nyt':
       return fetchNytArticles();
+    case 'currents':
+      return fetchCurrentsArticles();
     case 'rss':
       return fetchRssArticles(source.metadata?.feedUrl);
     default:

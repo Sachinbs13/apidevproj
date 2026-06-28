@@ -44,6 +44,8 @@ export async function invalidateFeedCaches() {
     cacheDeletePattern('trending:*'),
     cacheDeletePattern('analytics:*'),
     cacheDeletePattern('news:*'),
+    cacheDeletePattern('local:*'),
+    cacheDeletePattern('brief:*'),
     cacheDeletePattern('search:*'),
   ]);
   logger.debug('Feed caches invalidated');

@@ -1,7 +1,9 @@
 import MorningBrief from '../models/MorningBrief.js';
 import Article from '../models/Article.js';
-import { translateText } from './language.service.js';
+import { translateText, translateDigest } from './language.service.js';
 import { emitBrief } from '../websocket/handlers.js';
+import { cacheGet, cacheSet, cacheDeletePattern, buildCacheKey } from './cache.service.js';
+import { env } from '../config/env.js';
 import logger from '../utils/logger.js';
 
 // Assembles an AI-style text block summarizing articles
@@ -87,14 +89,18 @@ export async function generateDailyBriefs(dateString) {
   );
 
   emitBrief(brief);
+  await cacheDeletePattern('brief:*');
 
   return brief;
 }
 
 export async function getMorningBriefForUser(user, dateString, lang = 'English') {
   const occupation = user.preferences?.occupation || 'General';
-  
-  // Try to find the pre-generated brief
+
+  const cacheKey = buildCacheKey('brief', { date: dateString, occupation, lang });
+  const cached = await cacheGet(cacheKey);
+  if (cached) return cached;
+
   let dailyBrief = await MorningBrief.findOne({ dateString });
 
   // If not generated, trigger generation on-the-fly
@@ -104,24 +110,27 @@ export async function getMorningBriefForUser(user, dateString, lang = 'English')
 
   const userBrief = dailyBrief.briefs[occupation] || dailyBrief.briefs.General;
 
-  // Translate if required
+  let result;
   if (lang !== 'English') {
-    return {
+    result = {
       dateString,
       occupation,
       language: lang,
-      digest2Min: translateText(userBrief.digest2Min, lang),
-      digest5Min: translateText(userBrief.digest5Min, lang)
+      digest2Min: translateDigest(userBrief.digest2Min, lang),
+      digest5Min: translateDigest(userBrief.digest5Min, lang),
+    };
+  } else {
+    result = {
+      dateString,
+      occupation,
+      language: 'English',
+      digest2Min: userBrief.digest2Min,
+      digest5Min: userBrief.digest5Min,
     };
   }
 
-  return {
-    dateString,
-    occupation,
-    language: 'English',
-    digest2Min: userBrief.digest2Min,
-    digest5Min: userBrief.digest5Min
-  };
+  await cacheSet(cacheKey, result, env.cacheTtlSeconds);
+  return result;
 }
 
 export default { generateDailyBriefs, getMorningBriefForUser };

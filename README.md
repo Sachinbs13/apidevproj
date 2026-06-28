@@ -2,27 +2,40 @@
 
 **Co-authored by Sachin**
 
-Multi-API news analytics platform that aggregates headlines from several external sources, deduplicates overlapping stories, and exposes them through a REST API, WebSocket live feed, and React dashboard.
-
-Built as a MERN-stack portfolio project with production-oriented patterns: caching, Docker, CI/CD, and deployment configs.
+India-focused news intelligence platform that aggregates headlines from multiple APIs, deduplicates overlapping stories, enriches articles with regional metadata and sentiment, and delivers them through a REST API, WebSocket live feed, and React dashboard.
 
 ## Features
 
-- **Multi-source ingestion** — NewsAPI, GNews, The Guardian, NYT, RSS feeds
+- **Multi-source ingestion** — Currents API, NewsAPI, GNews, The Guardian, NYT, RSS feeds
 - **Deduplication engine** — Jaccard + cosine similarity, source merging
-- **REST API** — Paginated feed, search, trending, analytics, auth, API keys
-- **WebSockets** — Live news, trending, breaking alerts, topic subscriptions
-- **React dashboard** — Feed, search, trending, compare, analytics, alerts
-- **Redis caching** — Trending, search, and frequent queries
-- **Sentiment & auto-tagging** — AFINN sentiment scoring, keyword category tagging
+- **India intelligence** — Regional tagging, occupation-based briefs, personalized feed, local news by state/city
+- **REST API** — Feed, search, trending, local news, article detail, user library (saved/history)
+- **WebSockets** — Live news, trending, breaking alerts, brief updates, topic/category subscriptions
+- **React dashboard** — Home (brief + local + feed), trending, search, alerts, profile
+- **Redis caching** — Trending, search, local, brief, and frequent queries
+- **Auth & onboarding** — JWT, preferences, occupation/interests chips at registration
 - **Docker & CI** — `docker compose` stack, GitHub Actions pipeline
+
+## App navigation
+
+| Route | Description |
+|-------|-------------|
+| `/` | Home — Today's Brief, local news, personalized/global feed |
+| `/trending` | Breaking, top topics, most read, ranked stories |
+| `/search` | Full-text search |
+| `/news/:id` | Article detail with source comparison |
+| `/alerts` | Topic alert presets (auth required) |
+| `/profile` | Settings, saved articles, reading history (auth required) |
+| `/analytics` | Portfolio analytics page (not in main nav) |
+
+Legacy routes redirect: `/brief`, `/local`, `/schemes`, `/compare`, `/preferences` → new locations.
 
 ## Tech stack
 
 | Layer | Technologies |
 |-------|----------------|
 | Backend | Node.js 20+, Express, MongoDB, Mongoose, Socket.io, Redis, node-cron |
-| Frontend | React 18, Vite, Tailwind CSS, Redux Toolkit, Recharts |
+| Frontend | React 18, Vite, Tailwind CSS, Redux Toolkit, TanStack React Query, Recharts |
 | DevOps | Docker, GitHub Actions, Render / Railway / Vercel configs |
 
 ## Project structure
@@ -35,6 +48,7 @@ apidevproj/
 │   └── docker-compose.yml
 ├── .github/workflows/    # CI pipeline
 ├── project-steps.md      # Build phases & API reference
+├── REDESIGN.md           # India-focused UX redesign spec
 └── README.md
 ```
 
@@ -43,11 +57,7 @@ apidevproj/
 - [Node.js](https://nodejs.org/) 20+
 - [MongoDB](https://www.mongodb.com/) (local or Atlas)
 - [Redis](https://redis.io/) (optional — caching degrades gracefully if unavailable)
-- API keys (optional for ingestion):
-  - [NewsAPI](https://newsapi.org)
-  - [GNews](https://gnews.io)
-  - [Guardian Open Platform](https://open-platform.theguardian.com)
-  - [NYT Developer](https://developer.nytimes.com)
+- API keys (optional for ingestion): Currents API (free tier), NewsAPI, GNews, Guardian, NYT
 
 ## Quick start (local)
 
@@ -56,14 +66,14 @@ apidevproj/
 ```bash
 cd insighthub/backend
 cp .env.example .env
-# Edit .env — add MongoDB URI, JWT_SECRET, and API keys
+# Edit .env — MongoDB URI, JWT_SECRET, API keys
 
 npm install
 npm run dev
 ```
 
-API runs at **http://localhost:5000**  
-Swagger docs at **http://localhost:5000/api-docs**
+API: **http://localhost:5000**  
+Swagger: **http://localhost:5000/api-docs**
 
 ### 2. Frontend
 
@@ -75,19 +85,25 @@ npm install
 npm run dev
 ```
 
-App runs at **http://localhost:5173**
+App: **http://localhost:5173** (light/dark mode toggle in navbar)
 
 ### 3. Docker (backend + MongoDB + Redis)
 
 ```bash
 cd insighthub
 cp backend/.env.example backend/.env
-# Set JWT_SECRET and API keys in backend/.env
 
 docker compose up --build
 ```
 
-Then start the frontend separately (`npm run dev` in `insighthub/frontend`).
+Start the frontend separately (`npm run dev` in `insighthub/frontend`).
+
+### 4. Seed mock data (optional)
+
+```bash
+cd insighthub/backend
+node scratch/seedMockArticles.js
+```
 
 ## Environment variables
 
@@ -99,6 +115,7 @@ Then start the frontend separately (`npm run dev` in `insighthub/frontend`).
 | `REDIS_URL` | Redis URL (default `redis://localhost:6379`) |
 | `JWT_SECRET` | Secret for JWT signing |
 | `NEWSAPI_KEY` | NewsAPI.org key |
+| `CURRENTS_API_KEY` | [Currents API](https://currentsapi.services/en/register) key (free: 1,000 req/day) |
 | `GNEWS_API_KEY` | GNews key |
 | `GUARDIAN_API_KEY` | Guardian API key |
 | `NYT_API_KEY` | New York Times API key |
@@ -114,23 +131,49 @@ See [`insighthub/backend/.env.example`](insighthub/backend/.env.example) for the
 
 ## API overview
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Health check |
-| GET | `/news` | Paginated feed |
-| GET | `/news/:id` | Single article |
-| GET | `/news/compare?topic=` | Multi-source comparison |
-| GET | `/search?q=` | Full-text search |
-| GET | `/trending` | Trending stories |
-| GET | `/analytics` | Dedup & source stats |
-| GET | `/sources` | Source health |
-| POST | `/auth/register` | Register |
-| POST | `/auth/login` | Login |
-| POST | `/preferences` | Save preferences (JWT) |
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/health` | — | Health check |
+| GET | `/news` | — | Paginated feed |
+| GET | `/news/local` | — | Local news by `state` / `city` |
+| GET | `/news/:id` | — | Article detail + source variants |
+| GET | `/news/compare?topic=` | — | Multi-source comparison |
+| GET | `/news/feed/personalized` | JWT | Occupation/topic-ranked feed |
+| GET | `/news/summary/:id` | — | Multilingual summary |
+| GET | `/search?q=` | — | Full-text search |
+| GET | `/trending` | — | Trending stories |
+| GET | `/trending/topics` | — | Top categories from trending |
+| GET | `/trending/most-read` | — | Most-read articles |
+| GET | `/brief/today` | JWT | Today's brief (2-min / 5-min) |
+| GET | `/user/saved` | JWT | Saved articles |
+| POST | `/user/saved/:articleId` | JWT | Save article |
+| DELETE | `/user/saved/:articleId` | JWT | Unsave article |
+| GET | `/user/history` | JWT | Reading history |
+| POST | `/user/history/:articleId` | JWT | Record article view |
+| GET | `/analytics` | — | Dedup & source stats |
+| POST | `/auth/register` | — | Register (optional preferences payload) |
+| POST | `/auth/login` | — | Login |
+| POST | `/preferences` | JWT | Save preferences |
 
-WebSocket events: `live:news_update`, `live:trending`, `live:breaking`, `live:source_status`, `subscribe:topic`
+**WebSocket events:** `live:news_update`, `live:trending`, `live:breaking`, `live:brief`, `live:source_status`, `subscribe:topic`
 
-Full reference: [`project-steps.md`](project-steps.md)
+Full reference: [`project-steps.md`](project-steps.md) and Swagger at `/api-docs`
+
+## Client-side caching
+
+The frontend uses **TanStack React Query** for server-state caching. Feed, trending, local news, brief, search, articles, and user library queries use configurable `staleTime` values so revisiting pages reuses cached data instead of refetching immediately. WebSocket events (`live:news_update`, `live:trending`, `live:brief`) invalidate or update the relevant query cache to stay in sync with the backend.
+
+## Future improvements
+
+- Persist React Query cache to `sessionStorage` for faster cold navigations within a session
+- Optimistic updates for save/unsave article actions
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [`project-steps.md`](project-steps.md) | Build phases, architecture, API & WebSocket reference |
+| [`REDESIGN.md`](REDESIGN.md) | India-focused News Intelligence Platform redesign spec |
 
 ## Deployment
 
@@ -140,9 +183,9 @@ Full reference: [`project-steps.md`](project-steps.md)
 | Backend | [Railway](https://railway.app) | `insighthub/backend/railway.json` |
 | Frontend | [Vercel](https://vercel.com) | `insighthub/frontend/vercel.json` |
 
-**Render / Railway:** Set root directory to `insighthub/backend`, add env vars from `.env.example`, use MongoDB Atlas + Redis (Upstash or similar).
+**Render / Railway:** Root directory `insighthub/backend`, env vars from `.env.example`, MongoDB Atlas + Redis.
 
-**Vercel:** Set root to `insighthub/frontend`, add `VITE_API_URL` pointing to your deployed API.
+**Vercel:** Root `insighthub/frontend`, set `VITE_API_URL` to deployed API URL.
 
 ## Scripts
 
@@ -159,14 +202,14 @@ npm run format   # Prettier
 
 ```bash
 npm run dev      # Dev server
-npm run build    # Production build
+npm run build    # Production build (code-split chunks)
 npm run preview  # Preview build
 npm run lint     # ESLint
 ```
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to `main`/`master`:
+GitHub Actions (`.github/workflows/ci.yml`) on push/PR to `main`/`master`:
 
 - Backend lint + import check
 - Frontend lint + build

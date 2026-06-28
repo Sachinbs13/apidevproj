@@ -317,3 +317,10 @@ Status legend: `[ ]` = To do · `[~]` = In progress · `[x]` = Done
 | `live:source_status` | Server → Client | Source went down or hit rate limit       |
 | `subscribe:topic`    | Client → Server | Subscribe to a keyword or category       |
 | `unsubscribe:topic`  | Client → Server | Unsubscribe from a topic                 |
+
+---
+
+## Future improvements
+
+- **TanStack React Query** — Implemented in `frontend/src/queries/`. See README “Client-side caching” for details.
+- Persist query cache across tab reloads via `sessionStorage` (optional enhancement).

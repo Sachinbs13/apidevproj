@@ -86,11 +86,35 @@ function normalizeRss(article) {
   };
 }
 
+function resolveCurrentsImage(image) {
+  if (!image || image === 'None') return '';
+  if (image.startsWith('//')) return `https:${image}`;
+  return image;
+}
+
+function normalizeCurrents(article) {
+  const category = Array.isArray(article.category)
+    ? article.category[0]
+    : article.category;
+
+  return {
+    title: article.title || '',
+    description: article.description || '',
+    content: article.description || '',
+    url: article.url || '',
+    imageUrl: resolveCurrentsImage(article.image),
+    publishedAt: article.published ? new Date(article.published) : new Date(),
+    category: (category || 'general').toLowerCase(),
+    author: article.author || 'Currents',
+  };
+}
+
 const normalizers = {
   newsapi: normalizeNewsApi,
   gnews: normalizeGNews,
   guardian: normalizeGuardian,
   nyt: normalizeNyt,
+  currents: normalizeCurrents,
   rss: normalizeRss,
 };
 

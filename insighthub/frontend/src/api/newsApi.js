@@ -21,6 +21,11 @@ export async function fetchNews(params = {}) {
   return data;
 }
 
+export async function fetchLocalNews(params = {}) {
+  const { data } = await client.get('/news/local', { params });
+  return data;
+}
+
 export async function fetchArticleById(id) {
   const { data } = await client.get(`/news/${id}`);
   return data;
@@ -38,6 +43,16 @@ export async function searchNews(params = {}) {
 
 export async function fetchTrending(params = {}) {
   const { data } = await client.get('/trending', { params });
+  return data;
+}
+
+export async function fetchTrendingTopics(params = {}) {
+  const { data } = await client.get('/trending/topics', { params });
+  return data;
+}
+
+export async function fetchMostRead(params = {}) {
+  const { data } = await client.get('/trending/most-read', { params });
   return data;
 }
 

@@ -11,7 +11,7 @@ export async function fetchNytArticles() {
     return { articles: [], rateLimitRemaining: null };
   }
 
-  const response = await axios.get(`${BASE_URL}/home.json`, {
+  const response = await axios.get(`${BASE_URL}/${env.nytSection}.json`, {
     params: { 'api-key': env.nytApiKey },
     timeout: 15000,
   });

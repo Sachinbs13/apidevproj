@@ -4,8 +4,10 @@ const newsSlice = createSlice({
   name: 'news',
   initialState: {
     liveArticles: [],
+    trendingArticles: [],
     breakingAlerts: [],
     subscribedTopics: [],
+    subscribedCategories: [],
   },
   reducers: {
     addLiveArticle(state, action) {
@@ -18,7 +20,17 @@ const newsSlice = createSlice({
       state.breakingAlerts = [action.payload, ...state.breakingAlerts].slice(0, 20);
     },
     setTrendingArticles(state, action) {
-      state.liveArticles = action.payload;
+      state.trendingArticles = action.payload;
+    },
+    subscribeCategory(state, action) {
+      const category = action.payload.toLowerCase().trim();
+      if (!state.subscribedCategories.includes(category)) {
+        state.subscribedCategories.push(category);
+      }
+    },
+    unsubscribeCategory(state, action) {
+      const category = action.payload.toLowerCase().trim();
+      state.subscribedCategories = state.subscribedCategories.filter((c) => c !== category);
     },
     subscribeTopic(state, action) {
       const topic = action.payload.toLowerCase().trim();
@@ -40,6 +52,8 @@ export const {
   addLiveArticle,
   addBreakingAlert,
   setTrendingArticles,
+  subscribeCategory,
+  unsubscribeCategory,
   subscribeTopic,
   unsubscribeTopic,
   clearBreakingAlerts,

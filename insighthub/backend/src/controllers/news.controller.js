@@ -1,8 +1,9 @@
 import Article from '../models/Article.js';
 import Source from '../models/Source.js';
-import { getTrendingArticles } from '../services/trending.service.js';
+import { getTrendingArticles, getTrendingTopics, getMostReadArticles } from '../services/trending.service.js';
 import { getPersonalizedFeed } from '../services/recommendation.service.js';
-import { translateText } from '../services/language.service.js';
+import { translateArticleFields } from '../services/language.service.js';
+import { getLocalNewsArticles } from '../services/localNews.service.js';
 import { cacheGet, cacheSet, buildCacheKey } from '../services/cache.service.js';
 import { env } from '../config/env.js';
 
@@ -85,6 +86,30 @@ export async function getNews(req, res, next) {
 
     await cacheSet(cacheKey, response, env.cacheTtlSeconds);
     res.json(response);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getLocalNews(req, res, next) {
+  try {
+    const state = req.query.state?.trim();
+    if (!state) {
+      return res.status(400).json({ success: false, message: 'Query parameter "state" is required' });
+    }
+
+    const city = req.query.city?.trim() || '';
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+
+    const { articles, pagination } = await getLocalNewsArticles({ state, city, page, limit });
+
+    res.json({
+      success: true,
+      data: articles,
+      pagination,
+      meta: { state, city: city || null },
+    });
   } catch (error) {
     next(error);
   }
@@ -175,6 +200,41 @@ export async function getTrending(req, res, next) {
   }
 }
 
+export async function getTrendingTopicsHandler(req, res, next) {
+  try {
+    const limit = Math.min(20, Math.max(1, parseInt(req.query.limit, 10) || 8));
+    const windowHours = Math.min(
+      168,
+      Math.max(1, parseInt(req.query.windowHours, 10) || env.trendingWindowHours),
+    );
+
+    const topics = await getTrendingTopics({ limit, windowHours });
+
+    res.json({
+      success: true,
+      data: topics,
+      meta: { limit, windowHours, count: topics.length },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getMostRead(req, res, next) {
+  try {
+    const limit = Math.min(30, Math.max(1, parseInt(req.query.limit, 10) || 10));
+    const articles = await getMostReadArticles({ limit });
+
+    res.json({
+      success: true,
+      data: articles,
+      meta: { limit, count: articles.length },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getSources(req, res, next) {
   try {
     const sources = await Source.find().sort({ name: 1 }).lean();
@@ -213,15 +273,15 @@ export async function getArticleSummary(req, res, next) {
     }
 
     const lang = req.query.lang || 'English';
-    const textToTranslate = article.description || article.title || '';
-    const translated = translateText(textToTranslate, lang, article.category);
+    const { title, summary } = translateArticleFields(article, lang);
 
     res.json({
       success: true,
       data: {
         articleId: article._id,
         language: lang,
-        summary: translated
+        title,
+        summary,
       }
     });
   } catch (error) {

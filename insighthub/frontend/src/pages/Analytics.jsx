@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -8,7 +7,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import { fetchAnalytics } from '../api/newsApi.js';
+import { useAnalyticsQuery } from '../queries/useArticleQueries.js';
 import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
 import StatusPill from '../components/ui/StatusPill.jsx';
 
@@ -23,23 +22,15 @@ function StatCard({ label, value, sub }) {
 }
 
 function Analytics() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data, isLoading, error } = useAnalyticsQuery();
+  const errorMessage = error?.response?.data?.message || error?.message || '';
 
-  useEffect(() => {
-    fetchAnalytics()
-      .then((res) => setData(res.data))
-      .catch((err) => setError(err.response?.data?.message || 'Failed to load analytics'))
-      .finally(() => setLoading(false));
-  }, []);
+  if (isLoading) return <LoadingSpinner label="Loading analytics..." />;
 
-  if (loading) return <LoadingSpinner label="Loading analytics..." />;
-
-  if (error) {
+  if (errorMessage) {
     return (
       <div className="rounded-lg border border-red-800 bg-red-950/40 p-4 text-sm text-red-300">
-        {error}
+        {errorMessage}
       </div>
     );
   }

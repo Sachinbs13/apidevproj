@@ -25,5 +25,15 @@ services:
         sync: false
       - key: NYT_API_KEY
         sync: false
+      - key: CURRENTS_API_KEY
+        sync: false
+      - key: NEWS_COUNTRY
+        value: in
+      - key: NEWS_LANG
+        value: en
+      - key: GUARDIAN_SECTION
+        value: world/india
+      - key: NYT_SECTION
+        value: world
       - key: REDIS_ENABLED
         value: 'true'

@@ -3,6 +3,80 @@ import ApiKey from '../models/ApiKey.js';
 import { signToken } from '../utils/jwt.js';
 import { generateApiKey, hashApiKey } from '../utils/generateApiKey.js';
 
+const ALLOWED_OCCUPATIONS = [
+  'Student',
+  'Teacher',
+  'Government Employee',
+  'Software Engineer',
+  'Investor',
+  'Farmer',
+  'General',
+];
+
+const ALLOWED_LANGUAGES = ['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Malayalam'];
+
+function applyPreferences(user, body) {
+  const { topics, sources, occupation, state, district, preferredLanguage, interests, onboardingCompleted } =
+    body;
+
+  if (topics !== undefined) {
+    if (!Array.isArray(topics)) {
+      const error = new Error('topics must be an array');
+      error.statusCode = 400;
+      throw error;
+    }
+    user.preferences.topics = topics.map((t) => String(t).trim().toLowerCase()).filter(Boolean);
+  }
+
+  if (sources !== undefined) {
+    if (!Array.isArray(sources)) {
+      const error = new Error('sources must be an array');
+      error.statusCode = 400;
+      throw error;
+    }
+    user.preferences.sources = sources.map((s) => String(s).trim()).filter(Boolean);
+  }
+
+  if (interests !== undefined) {
+    if (!Array.isArray(interests)) {
+      const error = new Error('interests must be an array');
+      error.statusCode = 400;
+      throw error;
+    }
+    user.preferences.interests = interests.map((t) => String(t).trim().toLowerCase()).filter(Boolean);
+  }
+
+  if (occupation !== undefined) {
+    if (!ALLOWED_OCCUPATIONS.includes(occupation)) {
+      const error = new Error('Invalid occupation preference');
+      error.statusCode = 400;
+      throw error;
+    }
+    user.preferences.occupation = occupation;
+  }
+
+  if (state !== undefined) {
+    user.preferences.state = String(state).trim();
+  }
+
+  if (district !== undefined) {
+    user.preferences.district = String(district).trim();
+  }
+
+  if (preferredLanguage !== undefined) {
+    if (!ALLOWED_LANGUAGES.includes(preferredLanguage)) {
+      const error = new Error('Invalid preferred language');
+      error.statusCode = 400;
+      throw error;
+    }
+    user.preferences.preferredLanguage = preferredLanguage;
+  }
+
+  if (onboardingCompleted !== undefined) {
+    user.preferences.onboardingCompleted = Boolean(onboardingCompleted);
+  }
+}
+
 function formatUser(user) {
   return {
     id: user._id,
@@ -15,7 +89,7 @@ function formatUser(user) {
 
 export async function register(req, res, next) {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, preferences } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -36,7 +110,16 @@ export async function register(req, res, next) {
       return res.status(409).json({ success: false, message: 'Email already registered' });
     }
 
-    const user = await User.create({ name, email, password });
+    const user = new User({ name, email, password });
+
+    if (preferences && typeof preferences === 'object') {
+      applyPreferences(user, preferences);
+      if (preferences.interests?.length && !preferences.topics?.length) {
+        user.preferences.topics = [...user.preferences.interests];
+      }
+    }
+
+    await user.save();
     const token = signToken({ id: user._id, email: user.email, role: user.role });
 
     res.status(201).json({
@@ -44,6 +127,9 @@ export async function register(req, res, next) {
       data: { user: formatUser(user), token },
     });
   } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ success: false, message: error.message });
+    }
     next(error);
   }
 }
@@ -77,49 +163,17 @@ export async function login(req, res, next) {
 
 export async function savePreferences(req, res, next) {
   try {
-    const { topics, sources, occupation, state, district, preferredLanguage } = req.body;
     const user = await User.findById(req.user.id);
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    if (topics !== undefined) {
-      if (!Array.isArray(topics)) {
-        return res.status(400).json({ success: false, message: 'topics must be an array' });
-      }
-      user.preferences.topics = topics.map((t) => String(t).trim()).filter(Boolean);
-    }
+    applyPreferences(user, req.body);
 
-    if (sources !== undefined) {
-      if (!Array.isArray(sources)) {
-        return res.status(400).json({ success: false, message: 'sources must be an array' });
-      }
-      user.preferences.sources = sources.map((s) => String(s).trim()).filter(Boolean);
-    }
-
-    if (occupation !== undefined) {
-      const allowedOccupations = ['Student', 'Software Engineer', 'Investor', 'Farmer', 'General'];
-      if (!allowedOccupations.includes(occupation)) {
-        return res.status(400).json({ success: false, message: 'Invalid occupation preference' });
-      }
-      user.preferences.occupation = occupation;
-    }
-
-    if (state !== undefined) {
-      user.preferences.state = String(state).trim();
-    }
-
-    if (district !== undefined) {
-      user.preferences.district = String(district).trim();
-    }
-
-    if (preferredLanguage !== undefined) {
-      const allowedLanguages = ['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Malayalam'];
-      if (!allowedLanguages.includes(preferredLanguage)) {
-        return res.status(400).json({ success: false, message: 'Invalid preferred language' });
-      }
-      user.preferences.preferredLanguage = preferredLanguage;
+    if (req.body.interests?.length && req.body.topics === undefined) {
+      const merged = new Set([...user.preferences.interests, ...user.preferences.topics]);
+      user.preferences.topics = [...merged];
     }
 
     await user.save();
@@ -129,6 +183,9 @@ export async function savePreferences(req, res, next) {
       data: { preferences: user.preferences },
     });
   } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ success: false, message: error.message });
+    }
     next(error);
   }
 }

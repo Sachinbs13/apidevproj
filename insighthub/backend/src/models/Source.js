@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const SOURCE_TYPES = ['newsapi', 'gnews', 'guardian', 'nyt', 'rss'];
+const SOURCE_TYPES = ['newsapi', 'gnews', 'guardian', 'nyt', 'currents', 'rss'];
 const SOURCE_STATUSES = ['active', 'degraded', 'down'];
 
 const sourceSchema = new mongoose.Schema(

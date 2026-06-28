@@ -3,7 +3,15 @@ import Article from '../models/Article.js';
 const occupationProfiles = {
   Student: {
     categories: ['technology', 'general', 'science'],
-    keywords: ['exam', 'placement', 'scholarship', 'education', 'ai', 'hackathon', 'college', 'university', 'syllabus', 'career', 'internship']
+    keywords: ['exam', 'placement', 'scholarship', 'education', 'ai', 'hackathon', 'college', 'university', 'syllabus', 'career', 'internship'],
+  },
+  Teacher: {
+    categories: ['general', 'science'],
+    keywords: ['education', 'university', 'research', 'grant', 'school', 'teaching', 'curriculum', 'exam'],
+  },
+  'Government Employee': {
+    categories: ['general', 'business'],
+    keywords: ['order', 'circular', 'recruitment', 'policy', 'government', 'gazette', 'notification', 'scheme'],
   },
   'Software Engineer': {
     categories: ['technology', 'business'],

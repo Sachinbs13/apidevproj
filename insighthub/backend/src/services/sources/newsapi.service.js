@@ -14,7 +14,7 @@ export async function fetchNewsApiArticles() {
   const response = await axios.get(`${BASE_URL}/top-headlines`, {
     params: {
       apiKey: env.newsApiKey,
-      country: 'us',
+      country: env.newsCountry,
       pageSize: 50,
     },
     timeout: 15000,
