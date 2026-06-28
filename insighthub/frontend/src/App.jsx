@@ -10,6 +10,9 @@ import Analytics from './pages/Analytics.jsx';
 import Alerts from './pages/Alerts.jsx';
 import Login from './pages/Login.jsx';
 import Preferences from './pages/Preferences.jsx';
+import MorningBriefPage from './pages/MorningBriefPage.jsx';
+import LocalIntelligence from './pages/LocalIntelligence.jsx';
+import SchemesIntelligence from './pages/SchemesIntelligence.jsx';
 import { ROUTES } from './constants/routes.js';
 
 function App() {
@@ -33,6 +36,16 @@ function App() {
           <Route path={ROUTES.TRENDING} element={<Trending />} />
           <Route path={ROUTES.COMPARE} element={<Compare />} />
           <Route path={ROUTES.ANALYTICS} element={<Analytics />} />
+          <Route path={ROUTES.LOCAL} element={<LocalIntelligence />} />
+          <Route path={ROUTES.SCHEMES} element={<SchemesIntelligence />} />
+          <Route
+            path={ROUTES.BRIEF}
+            element={
+              <ProtectedRoute>
+                <MorningBriefPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path={ROUTES.ALERTS}
             element={

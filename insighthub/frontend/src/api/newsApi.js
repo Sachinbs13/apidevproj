@@ -71,4 +71,34 @@ export async function fetchProfile() {
   return data;
 }
 
+export async function fetchPersonalizedFeed(params = {}) {
+  const { data } = await client.get('/news/feed/personalized', { params });
+  return data;
+}
+
+export async function fetchTodayBrief(params = {}) {
+  const { data } = await client.get('/brief/today', { params });
+  return data;
+}
+
+export async function fetchTrendingRegions() {
+  const { data } = await client.get('/regions/trending');
+  return data;
+}
+
+export async function fetchRegionalAnalytics() {
+  const { data } = await client.get('/regions/analytics');
+  return data;
+}
+
+export async function fetchRecommendedSchemes() {
+  const { data } = await client.get('/schemes/recommend');
+  return data;
+}
+
+export async function fetchArticleSummary(id, lang) {
+  const { data } = await client.get(`/news/summary/${id}`, { params: { lang } });
+  return data;
+}
+
 export default client;

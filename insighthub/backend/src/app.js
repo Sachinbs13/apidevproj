@@ -14,6 +14,10 @@ import searchRoutes from './routes/search.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import preferencesRoutes from './routes/preferences.routes.js';
+import briefRoutes from './routes/brief.routes.js';
+import schemeRoutes from './routes/scheme.routes.js';
+import regionRoutes from './routes/region.routes.js';
+import languageRoutes from './routes/language.routes.js';
 
 const app = express();
 
@@ -39,6 +43,10 @@ app.use('/search', searchRoutes);
 app.use('/analytics', analyticsRoutes);
 app.use('/auth', authRoutes);
 app.use('/preferences', preferencesRoutes);
+app.use('/brief', briefRoutes);
+app.use('/schemes', schemeRoutes);
+app.use('/regions', regionRoutes);
+app.use('/languages', languageRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

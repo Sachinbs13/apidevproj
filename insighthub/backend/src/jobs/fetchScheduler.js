@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import Source from '../models/Source.js';
 import { ingestFromSource } from '../services/aggregator.service.js';
+import { generateDailyBriefs } from '../services/brief.service.js';
 import logger from '../utils/logger.js';
 
 const activeJobs = new Map();
@@ -36,7 +37,19 @@ export async function startFetchScheduler() {
     scheduleSourceJob(source);
   }
 
-  logger.info(`Fetch scheduler started for ${sources.length} source(s)`);
+  // Schedule a daily job at 6:00 AM to pre-generate morning briefs
+  const morningBriefJob = cron.schedule('0 6 * * *', async () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    try {
+      await generateDailyBriefs(todayStr);
+      logger.info(`Automatically generated daily morning briefs for ${todayStr}`);
+    } catch (error) {
+      logger.error(`Failed to automatically generate morning briefs: ${error.message}`);
+    }
+  });
+  activeJobs.set('__morning_briefs__', morningBriefJob);
+
+  logger.info(`Fetch scheduler started for ${sources.length} source(s) and morning briefs cron`);
 }
 
 export function stopFetchScheduler() {

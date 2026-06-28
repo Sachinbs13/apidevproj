@@ -9,6 +9,18 @@ const userSchema = new mongoose.Schema(
     preferences: {
       topics: { type: [String], default: [] },
       sources: { type: [String], default: [] },
+      occupation: { 
+        type: String, 
+        enum: ['Student', 'Software Engineer', 'Investor', 'Farmer', 'General'], 
+        default: 'General' 
+      },
+      state: { type: String, default: 'National' },
+      district: { type: String, default: '' },
+      preferredLanguage: { 
+        type: String, 
+        enum: ['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Malayalam'], 
+        default: 'English' 
+      },
     },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
   },

@@ -28,6 +28,27 @@ const articleSchema = new mongoose.Schema(
     hash: { type: String, index: true },
     titleTokens: { type: [String], default: [] },
     sources: [sourceRefSchema],
+    regionalInfo: {
+      country: { type: String, default: 'India' },
+      state: { type: String, default: 'National', index: true },
+      district: { type: String, default: '' },
+      city: { type: String, default: '' }
+    },
+    schemeDetails: {
+      isSchemeRelated: { type: Boolean, default: false, index: true },
+      schemeName: { type: String, default: '' },
+      eligibility: { type: String, default: '' },
+      benefits: { type: String, default: '' },
+      officialWebsite: { type: String, default: '' }
+    },
+    aiSummaries: {
+      English: { type: String, default: '' },
+      Hindi: { type: String, default: '' },
+      Kannada: { type: String, default: '' },
+      Tamil: { type: String, default: '' },
+      Telugu: { type: String, default: '' },
+      Malayalam: { type: String, default: '' }
+    }
   },
   { timestamps: true },
 );

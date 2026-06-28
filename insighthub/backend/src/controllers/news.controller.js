@@ -1,6 +1,8 @@
 import Article from '../models/Article.js';
 import Source from '../models/Source.js';
 import { getTrendingArticles } from '../services/trending.service.js';
+import { getPersonalizedFeed } from '../services/recommendation.service.js';
+import { translateText } from '../services/language.service.js';
 import { cacheGet, cacheSet, buildCacheKey } from '../services/cache.service.js';
 import { env } from '../config/env.js';
 
@@ -29,6 +31,10 @@ export async function getNews(req, res, next) {
       filter.category = req.query.category.toLowerCase();
     }
 
+    if (req.query.state) {
+      filter['regionalInfo.state'] = req.query.state;
+    }
+
     if (req.query.source) {
       filter['sources.sourceName'] = new RegExp(req.query.source, 'i');
     }
@@ -46,6 +52,7 @@ export async function getNews(req, res, next) {
       source: req.query.source || '',
       from: req.query.from || '',
       to: req.query.to || '',
+      state: req.query.state || '',
     });
 
     const cached = await cacheGet(cacheKey);
@@ -176,6 +183,46 @@ export async function getSources(req, res, next) {
       success: true,
       data: sources,
       health: buildHealthSummary(sources),
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getPersonalizedNews(req, res, next) {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+
+    // req.user contains the authenticated user details populated by authMiddleware
+    const feed = await getPersonalizedFeed(req.user, limit, page);
+    res.json({
+      success: true,
+      data: feed
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getArticleSummary(req, res, next) {
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) {
+      return res.status(404).json({ success: false, message: 'Article not found' });
+    }
+
+    const lang = req.query.lang || 'English';
+    const textToTranslate = article.description || article.title || '';
+    const translated = translateText(textToTranslate, lang, article.category);
+
+    res.json({
+      success: true,
+      data: {
+        articleId: article._id,
+        language: lang,
+        summary: translated
+      }
     });
   } catch (error) {
     next(error);

@@ -77,7 +77,7 @@ export async function login(req, res, next) {
 
 export async function savePreferences(req, res, next) {
   try {
-    const { topics, sources } = req.body;
+    const { topics, sources, occupation, state, district, preferredLanguage } = req.body;
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -96,6 +96,30 @@ export async function savePreferences(req, res, next) {
         return res.status(400).json({ success: false, message: 'sources must be an array' });
       }
       user.preferences.sources = sources.map((s) => String(s).trim()).filter(Boolean);
+    }
+
+    if (occupation !== undefined) {
+      const allowedOccupations = ['Student', 'Software Engineer', 'Investor', 'Farmer', 'General'];
+      if (!allowedOccupations.includes(occupation)) {
+        return res.status(400).json({ success: false, message: 'Invalid occupation preference' });
+      }
+      user.preferences.occupation = occupation;
+    }
+
+    if (state !== undefined) {
+      user.preferences.state = String(state).trim();
+    }
+
+    if (district !== undefined) {
+      user.preferences.district = String(district).trim();
+    }
+
+    if (preferredLanguage !== undefined) {
+      const allowedLanguages = ['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Malayalam'];
+      if (!allowedLanguages.includes(preferredLanguage)) {
+        return res.status(400).json({ success: false, message: 'Invalid preferred language' });
+      }
+      user.preferences.preferredLanguage = preferredLanguage;
     }
 
     await user.save();

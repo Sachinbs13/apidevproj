@@ -1,6 +1,7 @@
 import { verifyToken } from '../utils/jwt.js';
 import { verifyApiKey } from '../utils/generateApiKey.js';
 import ApiKey from '../models/ApiKey.js';
+import User from '../models/User.js';
 import logger from '../utils/logger.js';
 import {
   joinTopicRoom,
@@ -15,9 +16,12 @@ async function authenticateHandshake(handshake) {
 
   if (token) {
     try {
-      return { user: verifyToken(token), authType: 'jwt' };
-    } catch {
-      throw new Error('Invalid JWT token');
+      const decoded = verifyToken(token);
+      const user = await User.findById(decoded.id).lean();
+      if (!user) throw new Error('User not found');
+      return { user, authType: 'jwt' };
+    } catch (err) {
+      throw new Error(err.message || 'Invalid JWT token');
     }
   }
 
@@ -31,8 +35,9 @@ async function authenticateHandshake(handshake) {
         if (candidate.expiresAt && candidate.expiresAt < new Date()) {
           throw new Error('API key expired');
         }
+        const user = await User.findById(candidate.userId).lean();
         return {
-          user: { id: candidate.userId, authType: 'apiKey' },
+          user,
           authType: 'apiKey',
           apiKeyId: candidate._id,
         };
@@ -45,16 +50,31 @@ async function authenticateHandshake(handshake) {
 }
 
 export function registerSocketHandlers(io, socket) {
+  const userId = socket.user?._id || socket.user?.id;
   logger.info('WebSocket client connected', {
     socketId: socket.id,
-    userId: socket.user?.id,
+    userId,
     authType: socket.authType,
   });
 
   socket.emit('connected', {
     message: 'Connected to InsightHub live feed',
-    userId: socket.user?.id,
+    userId,
   });
+
+  // Automatically join regional state room
+  if (socket.user?.preferences?.state && socket.user.preferences.state !== 'National') {
+    const stateRoom = `state:${socket.user.preferences.state}`;
+    socket.join(stateRoom);
+    logger.info(`Socket automatically joined regional state room: ${stateRoom}`, { socketId: socket.id });
+  }
+
+  // Automatically join occupational room
+  if (socket.user?.preferences?.occupation && socket.user.preferences.occupation !== 'General') {
+    const occRoom = `occupation:${socket.user.preferences.occupation}`;
+    socket.join(occRoom);
+    logger.info(`Socket automatically joined occupational room: ${occRoom}`, { socketId: socket.id });
+  }
 
   socket.on('subscribe:topic', ({ topic, category } = {}) => {
     if (topic) {
