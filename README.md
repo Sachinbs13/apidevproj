@@ -11,7 +11,7 @@ India-focused news intelligence platform that aggregates headlines from multiple
 - **India intelligence** — Regional tagging, occupation-based briefs, personalized feed, local news by state/city
 - **REST API** — Feed, search, trending, local news, article detail, user library (saved/history)
 - **WebSockets** — Live news, trending, breaking alerts, brief updates, topic/category subscriptions
-- **React dashboard** — Home (brief + local + feed), trending, search, alerts, profile
+- **React dashboard** — Home (brief + local + schemes + feed), trending, search, alerts, article detail
 - **Redis caching** — Trending, search, local, brief, and frequent queries
 - **Auth & onboarding** — JWT, preferences, occupation/interests chips at registration
 - **Docker & CI** — `docker compose` stack, GitHub Actions pipeline
@@ -23,12 +23,13 @@ India-focused news intelligence platform that aggregates headlines from multiple
 | `/` | Home — Today's Brief, local news, personalized/global feed |
 | `/trending` | Breaking, top topics, most read, ranked stories |
 | `/search` | Full-text search |
-| `/news/:id` | Article detail with source comparison |
-| `/alerts` | Topic alert presets (auth required) |
-| `/profile` | Settings, saved articles, reading history (auth required) |
+| `/alerts` | Topic alert presets with filtered live notifications (auth required) |
+| `/news/:id` | Article detail with source comparison and save |
 | `/analytics` | Portfolio analytics page (not in main nav) |
 
-Legacy routes redirect: `/brief`, `/local`, `/schemes`, `/compare`, `/preferences` → new locations.
+Legacy routes redirect: `/brief`, `/local`, `/schemes`, `/compare`, `/preferences`, `/profile` → Home or Search.
+
+**Signed-in utilities:** saved articles (navbar bookmark), subscription alerts (navbar bell, persisted in localStorage/sessionStorage).
 
 ## Tech stack
 
@@ -165,8 +166,9 @@ The frontend uses **TanStack React Query** for server-state caching. Feed, trend
 
 ## Future improvements
 
-- Persist React Query cache to `sessionStorage` for faster cold navigations within a session
-- Optimistic updates for save/unsave article actions
+- Reading history panel in navbar
+- Real machine translation API integration
+- Automated test suite (dedup, normalizers, auth)
 
 ## Documentation
 

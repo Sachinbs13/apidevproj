@@ -1,10 +1,73 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useSearchQuery } from '../queries/useSearchQuery.js';
+import { useTrendingQuery } from '../queries/useTrendingQueries.js';
+import { fetchNews } from '../api/newsApi.js';
+import { queryKeys, STALE_TIME } from '../constants/queryKeys.js';
 import ArticleCard from '../components/ui/ArticleCard.jsx';
 import Pagination from '../components/ui/Pagination.jsx';
 import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
+import SkeletonCard from '../components/ui/SkeletonCard.jsx';
+import TrendingTopics from '../components/trending/TrendingTopics.jsx';
+
+function SearchDiscovery() {
+  const { data: trending = [], isLoading: trendingLoading } = useTrendingQuery(6);
+  const { data: latest = [], isLoading: latestLoading } = useQuery({
+    queryKey: [...queryKeys.news.all, 'latest', 6],
+    queryFn: async () => {
+      const res = await fetchNews({ page: 1, limit: 6 });
+      return res.data || [];
+    },
+    staleTime: STALE_TIME.NEWS,
+  });
+
+  const loading = trendingLoading || latestLoading;
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <SkeletonCard />
+        <SkeletonCard />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <TrendingTopics />
+
+      {trending.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Trending now
+          </h2>
+          <div className="space-y-3">
+            {trending.map((article) => (
+              <ArticleCard key={article._id} article={article} showScore />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {latest.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Latest stories
+          </h2>
+          <div className="space-y-3">
+            {latest.map((article) => (
+              <ArticleCard key={article._id} article={article} />
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
 
 function Search() {
+  const [searchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [submitted, setSubmitted] = useState('');
   const [page, setPage] = useState(1);
@@ -17,10 +80,22 @@ function Search() {
   const pagination = data?.pagination;
   const errorMessage = error?.response?.data?.message || error?.message || '';
   const loading = isLoading || isFetching;
+  const showDiscovery = !submitted;
+
+  useEffect(() => {
+    const q = searchParams.get('q')?.trim();
+    if (q) {
+      setQuery(q);
+      setSubmitted(q);
+      setPage(1);
+    }
+  }, [searchParams]);
 
   function handleSubmit(e) {
     e.preventDefault();
-    setSubmitted(query);
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    setSubmitted(trimmed);
     setPage(1);
   }
 
@@ -49,7 +124,9 @@ function Search() {
         </button>
       </form>
 
-      {loading && <LoadingSpinner label="Searching..." />}
+      {showDiscovery && <SearchDiscovery />}
+
+      {loading && submitted && <LoadingSpinner label="Searching..." />}
 
       {errorMessage && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
@@ -61,7 +138,7 @@ function Search() {
         <p className="py-8 text-center text-slate-500">No results for &ldquo;{submitted}&rdquo;</p>
       )}
 
-      {articles.length > 0 && (
+      {submitted && articles.length > 0 && (
         <div className="space-y-3">
           <p className="text-sm text-slate-500">
             {pagination?.total ?? articles.length} results for &ldquo;{submitted}&rdquo;

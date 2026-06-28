@@ -4,23 +4,87 @@ import toast from 'react-hot-toast';
 import {
   connectSocket,
   disconnectSocket,
+  getSocket,
   onNewsUpdate,
   onTrendingUpdate,
   onBreakingNews,
   onSourceStatus,
   onBriefUpdate,
+  resubscribeAll,
 } from '../api/socket.js';
 import { queryClient } from '../lib/queryClient.js';
 import { invalidateBriefQueries, invalidateNewsQueries } from '../lib/invalidateQueries.js';
 import { queryKeys } from '../constants/queryKeys.js';
-import { addLiveArticle, addBreakingAlert } from '../store/newsSlice.js';
+import {
+  getSubscriptionMatches,
+  formatSubscriptionAlertReason,
+  hasActiveSubscriptions,
+} from '../helpers/alertMatching.js';
+import { loadAlertSubscriptions } from '../helpers/alertSubscriptionsStorage.js';
+import { loadAlertHistory } from '../helpers/alertHistoryStorage.js';
+import { store } from '../store/index.js';
+import {
+  addLiveArticle,
+  addBreakingAlert,
+  addSubscriptionAlert,
+  hydrateSubscriptions,
+  resetSubscriptions,
+  setSubscriptionAlerts,
+} from '../store/newsSlice.js';
 
 const SocketContext = createContext(null);
+
+function dispatchSubscriptionAlert(article, { breakingReason, isBreakingEvent }) {
+  const { subscribedTopics, subscribedCategories } = store.getState().news;
+
+  if (!hasActiveSubscriptions(subscribedTopics, subscribedCategories)) {
+    return;
+  }
+
+  const matches = getSubscriptionMatches(article, subscribedTopics, subscribedCategories, {
+    isBreakingEvent,
+  });
+
+  if (matches.length === 0) {
+    return;
+  }
+
+  const matchLabel = matches.map((match) => match.label).join(' · ');
+  const reason = formatSubscriptionAlertReason({ matches, breakingReason });
+
+  store.dispatch(
+    addSubscriptionAlert({
+      article,
+      matches,
+      matchLabel,
+      breakingReason,
+      reason,
+    }),
+  );
+
+  toast(`Alert · ${matchLabel}: ${article.title}`, { icon: '📰', duration: 5000 });
+}
 
 export function SocketProvider({ children }) {
   const dispatch = useDispatch();
   const token = useSelector((state) => state.auth.token);
+  const userId = useSelector((state) => state.auth.user?.id);
   const [connected, setConnected] = useState(false);
+
+  useEffect(() => {
+    if (!userId) {
+      dispatch(resetSubscriptions());
+      return;
+    }
+
+    const saved = loadAlertSubscriptions(userId);
+    dispatch(hydrateSubscriptions(saved));
+    dispatch(setSubscriptionAlerts(loadAlertHistory(userId)));
+
+    if (getSocket()?.connected) {
+      resubscribeAll(saved.topics, saved.categories);
+    }
+  }, [userId, dispatch]);
 
   useEffect(() => {
     if (!token) {
@@ -31,15 +95,25 @@ export function SocketProvider({ children }) {
 
     const socket = connectSocket(token);
 
-    const handleConnect = () => setConnected(true);
+    const handleConnect = () => {
+      setConnected(true);
+      const { subscribedTopics, subscribedCategories } = store.getState().news;
+      resubscribeAll(subscribedTopics, subscribedCategories);
+    };
+
     const handleDisconnect = () => setConnected(false);
 
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
 
+    if (socket.connected) {
+      handleConnect();
+    }
+
     const unsubNews = onNewsUpdate(({ article }) => {
       dispatch(addLiveArticle(article));
       invalidateNewsQueries();
+      dispatchSubscriptionAlert(article, { isBreakingEvent: false });
     });
 
     const unsubTrending = onTrendingUpdate(({ articles }) => {
@@ -49,7 +123,7 @@ export function SocketProvider({ children }) {
 
     const unsubBreaking = onBreakingNews(({ article, reason }) => {
       dispatch(addBreakingAlert({ article, reason }));
-      toast(`Breaking: ${article.title}`, { icon: '🔴', duration: 5000 });
+      dispatchSubscriptionAlert(article, { breakingReason: reason, isBreakingEvent: true });
     });
 
     const unsubBrief = onBriefUpdate(() => {

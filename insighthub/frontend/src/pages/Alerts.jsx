@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import { Link } from 'react-router-dom';
 import AlertPresets from '../components/alerts/AlertPresets.jsx';
+import AlertsQuickStart from '../components/alerts/AlertsQuickStart.jsx';
+import MyAlertsFeed from '../components/alerts/MyAlertsFeed.jsx';
 import { useSocket } from '../hooks/useSocket.js';
-import { subscribeTopic, unsubscribeTopic } from '../store/newsSlice.js';
-import { articlePath } from '../constants/routes.js';
+import { subscribeTopic, unsubscribeTopic, clearSubscriptionAlerts } from '../store/newsSlice.js';
 import { cn } from '../utils/cn.js';
 
 function Alerts() {
@@ -13,7 +13,7 @@ function Alerts() {
   const { connected, isReady, subscribeToTopic, unsubscribeFromTopic } = useSocket();
   const subscribedTopics = useSelector((state) => state.news.subscribedTopics);
   const subscribedCategories = useSelector((state) => state.news.subscribedCategories);
-  const breakingAlerts = useSelector((state) => state.news.breakingAlerts);
+  const subscriptionAlerts = useSelector((state) => state.news.subscriptionAlerts);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [input, setInput] = useState('');
 
@@ -74,6 +74,8 @@ function Alerts() {
         )}
       </section>
 
+      {activeCount === 0 && isReady && <AlertsQuickStart />}
+
       <section>
         <button
           type="button"
@@ -105,7 +107,7 @@ function Alerts() {
 
       {subscribedTopics.length > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-medium text-slate-500">Custom keywords</h2>
+          <h2 className="mb-3 text-sm font-medium text-slate-500 dark:text-slate-400">Custom keywords</h2>
           <div className="flex flex-wrap gap-2">
             {subscribedTopics.map((topic) => (
               <span
@@ -127,35 +129,16 @@ function Alerts() {
         </section>
       )}
 
-      {breakingAlerts.length > 0 && (
-        <section>
-          <h2 className="mb-3 text-sm font-medium text-red-600 dark:text-red-400">Recent alerts</h2>
-          <ul className="space-y-2">
-            {breakingAlerts.slice(0, 5).map((alert, index) => (
-              <li
-                key={`${alert.article?._id}-${index}`}
-                className="rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-900/40 dark:bg-red-950/20"
-              >
-                {alert.article?._id ? (
-                  <Link
-                    to={articlePath(alert.article._id)}
-                    className="text-sm font-medium text-red-800 hover:text-red-600 dark:text-red-300"
-                  >
-                    {alert.article.title}
-                  </Link>
-                ) : (
-                  <p className="text-sm font-medium text-red-800 dark:text-red-300">
-                    {alert.article?.title}
-                  </p>
-                )}
-                {alert.reason && (
-                  <p className="mt-1 text-xs text-red-600/80 dark:text-red-400/70">{alert.reason}</p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <MyAlertsFeed
+        alerts={subscriptionAlerts}
+        limit={10}
+        onClear={subscriptionAlerts.length > 0 ? () => dispatch(clearSubscriptionAlerts()) : undefined}
+        emptyDescription={
+          activeCount > 0
+            ? 'Waiting for stories that match your subscriptions. New matches will toast and appear here.'
+            : 'Subscribe to presets or keywords above. Matching stories will appear here with live toasts.'
+        }
+      />
     </div>
   );
 }

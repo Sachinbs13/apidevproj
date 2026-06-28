@@ -4,6 +4,7 @@ import { INDIAN_STATES, STATE_CITIES } from '../../constants/indianStates.js';
 import { useLocalNews } from '../../hooks/useLocalNews.js';
 import { detectUserState } from '../../helpers/geolocation.js';
 import ArticleCard from '../ui/ArticleCard.jsx';
+import Select from '../ui/Select.jsx';
 import SkeletonCard from '../ui/SkeletonCard.jsx';
 import EmptyState from '../ui/EmptyState.jsx';
 
@@ -61,25 +62,25 @@ function LocalNewsSection({ defaultState, defaultExpanded }) {
       {expanded && (
         <div className="mt-4 space-y-4 border-t border-slate-200 pt-4 dark:border-slate-800">
           <div className="flex flex-wrap gap-2">
-            <select
+            <Select
+              variant="compact"
               value={state}
               onChange={(e) => {
                 setState(e.target.value);
                 setCity('');
               }}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
             >
               {INDIAN_STATES.filter((s) => s !== 'National').map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>
               ))}
-            </select>
+            </Select>
             {cities.length > 0 && (
-              <select
+              <Select
+                variant="compact"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
               >
                 <option value="">All cities</option>
                 {cities.map((c) => (
@@ -87,7 +88,7 @@ function LocalNewsSection({ defaultState, defaultExpanded }) {
                     {c}
                   </option>
                 ))}
-              </select>
+              </Select>
             )}
             <button
               type="button"

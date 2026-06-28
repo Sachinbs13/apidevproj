@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import SourceBadge from './SourceBadge.jsx';
+import ArticleMetaTags from './ArticleMetaTags.jsx';
 import { cn } from '../../utils/cn.js';
 import { articlePath } from '../../constants/routes.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useArticleSummaryQuery } from '../../queries/useArticleQueries.js';
+import { getPrimarySourceName, getPublisherFromSourceRef } from '../../helpers/articleMeta.js';
 
 function ArticleCard({ article, showScore, className }) {
   const sources = article.sources || [];
@@ -21,6 +23,8 @@ function ArticleCard({ article, showScore, className }) {
   const description = isEnglish
     ? article.description
     : translation?.summary || article.description;
+  const primarySource = getPrimarySourceName(article);
+  const extraSources = Math.max(0, sourceCount - 1);
 
   return (
     <article
@@ -43,19 +47,7 @@ function ArticleCard({ article, showScore, className }) {
           </div>
         )}
         <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="rounded bg-sky-950/80 border border-sky-500/20 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-sky-400">
-              {article.category}
-            </span>
-            
-            {article.regionalInfo?.state && article.regionalInfo.state !== 'National' && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-950/55 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/15">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-                📍 {article.regionalInfo.state}
-                {article.regionalInfo.city && ` • ${article.regionalInfo.city}`}
-              </span>
-            )}
-          </div>
+          <ArticleMetaTags article={article} />
 
           <div className="flex items-start gap-2">
             <Link
@@ -102,42 +94,54 @@ function ArticleCard({ article, showScore, className }) {
             ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1 text-[11px] text-slate-500">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-1 text-[11px] text-slate-500">
             <span>{new Date(article.publishedAt).toLocaleString()}</span>
-            <span>•</span>
+
+            {primarySource && (
+              <>
+                <span className="text-slate-300 dark:text-slate-700">•</span>
+                <SourceBadge name={primarySource} />
+                {extraSources > 0 && (
+                  <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 dark:bg-sky-950/40 dark:text-sky-400">
+                    +{extraSources} more
+                  </span>
+                )}
+              </>
+            )}
             
             {showScore && article.trendingScore != null && (
               <>
-                <span className="font-semibold text-violet-400">Impact Score: {article.trendingScore}</span>
-                <span>•</span>
-              </>
-            )}
-
-            {sourceCount > 1 && (
-              <>
-                <span className="font-semibold text-emerald-400 flex items-center gap-1 bg-emerald-950/20 px-1.5 py-0.2 rounded border border-emerald-500/10">
-                  ⚡ {sourceCount} Sources Tracked
+                <span className="text-slate-300 dark:text-slate-700">•</span>
+                <span className="font-semibold text-violet-600 dark:text-violet-400">
+                  Impact {article.trendingScore}
                 </span>
-                <span>•</span>
               </>
             )}
 
             {article.sentiment?.label && article.sentiment.label !== 'neutral' && (
-              <span
-                className={cn(
-                  'capitalize font-bold',
-                  article.sentiment.label === 'positive' ? 'text-emerald-400' : 'text-rose-400'
-                )}
-              >
-                {article.sentiment.label}
-              </span>
+              <>
+                <span className="text-slate-300 dark:text-slate-700">•</span>
+                <span
+                  className={cn(
+                    'capitalize font-semibold',
+                    article.sentiment.label === 'positive'
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-rose-600 dark:text-rose-400',
+                  )}
+                >
+                  {article.sentiment.label}
+                </span>
+              </>
             )}
           </div>
 
-          {sources.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {sources.map((ref, i) => (
-                <SourceBadge key={`${ref.sourceName}-${i}`} name={ref.sourceName} />
+          {extraSources > 0 && sources.length > 1 && (
+            <div className="flex flex-wrap gap-1.5">
+              {sources.slice(1).map((ref, i) => (
+                <SourceBadge
+                  key={`${ref.sourceName}-${i}`}
+                  name={getPublisherFromSourceRef(article, ref)}
+                />
               ))}
             </div>
           )}

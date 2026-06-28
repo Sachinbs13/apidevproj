@@ -67,13 +67,14 @@ export function useAnalyticsQuery() {
   });
 }
 
-export function useSavedArticlesQuery(page = 1, limit = 20) {
+export function useSavedArticlesQuery(page = 1, limit = 20, { enabled = true } = {}) {
   return useQuery({
     queryKey: queryKeys.user.saved(page, limit),
     queryFn: async () => {
       const res = await fetchSavedArticles({ page, limit });
       return { items: res.data || [], total: res.total || 0 };
     },
+    enabled,
     staleTime: STALE_TIME.USER,
   });
 }
@@ -113,8 +114,19 @@ export function useToggleSaveMutation(articleId) {
       await saveArticle(articleId);
       return true;
     },
-    onSuccess: (saved) => {
-      queryClient.setQueryData(queryKeys.user.savedStatus(articleId), saved);
+    onMutate: async ({ saved }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.user.savedStatus(articleId) });
+      const previous = queryClient.getQueryData(queryKeys.user.savedStatus(articleId));
+      queryClient.setQueryData(queryKeys.user.savedStatus(articleId), !saved);
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(queryKeys.user.savedStatus(articleId), context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.savedStatus(articleId) });
       queryClient.invalidateQueries({ queryKey: ['user', 'saved'] });
     },
   });

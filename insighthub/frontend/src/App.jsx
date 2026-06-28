@@ -13,7 +13,6 @@ const Trending = lazy(() => import('./pages/Trending.jsx'));
 const Analytics = lazy(() => import('./pages/Analytics.jsx'));
 const Alerts = lazy(() => import('./pages/Alerts.jsx'));
 const Login = lazy(() => import('./pages/Login.jsx'));
-const Profile = lazy(() => import('./pages/Profile.jsx'));
 
 function App() {
   return (
@@ -35,7 +34,7 @@ function App() {
           <Route path={ROUTES.ANALYTICS} element={<Analytics />} />
           <Route path={ROUTES.BRIEF} element={<Navigate to={ROUTES.HOME} replace />} />
           <Route path={ROUTES.LOCAL} element={<Navigate to={`${ROUTES.HOME}?section=local`} replace />} />
-          <Route path={ROUTES.SCHEMES} element={<Navigate to={ROUTES.PROFILE} replace />} />
+          <Route path={ROUTES.SCHEMES} element={<Navigate to={ROUTES.HOME} replace />} />
           <Route path={ROUTES.COMPARE} element={<Navigate to={ROUTES.SEARCH} replace />} />
           <Route
             path={ROUTES.ALERTS}
@@ -45,15 +44,8 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path={ROUTES.PREFERENCES} element={<Navigate to={ROUTES.PROFILE} replace />} />
-          <Route
-            path={ROUTES.PROFILE}
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
+          <Route path={ROUTES.PREFERENCES} element={<Navigate to={ROUTES.HOME} replace />} />
+          <Route path={ROUTES.PROFILE} element={<Navigate to={ROUTES.HOME} replace />} />
         </Route>
         <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
         </Routes>

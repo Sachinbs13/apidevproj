@@ -36,7 +36,7 @@ function Sidebar() {
             Language
           </p>
           <div className="px-1">
-            <LanguagePicker />
+            <LanguagePicker align="left" fullWidth />
           </div>
         </div>
       </nav>

@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { login, register, clearError } from '../store/authSlice.js';
 import { ROUTES } from '../constants/routes.js';
 import { cn } from '../utils/cn.js';
-import OnboardingForm from '../components/profile/OnboardingForm.jsx';
+import OnboardingForm from '../components/auth/OnboardingForm.jsx';
 
 function Login() {
   const dispatch = useDispatch();

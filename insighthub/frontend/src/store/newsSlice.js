@@ -6,6 +6,7 @@ const newsSlice = createSlice({
     liveArticles: [],
     trendingArticles: [],
     breakingAlerts: [],
+    subscriptionAlerts: [],
     subscribedTopics: [],
     subscribedCategories: [],
   },
@@ -19,8 +20,27 @@ const newsSlice = createSlice({
     addBreakingAlert(state, action) {
       state.breakingAlerts = [action.payload, ...state.breakingAlerts].slice(0, 20);
     },
+    addSubscriptionAlert(state, action) {
+      const payload = {
+        ...action.payload,
+        receivedAt: action.payload.receivedAt || new Date().toISOString(),
+      };
+      state.subscriptionAlerts = [payload, ...state.subscriptionAlerts].slice(0, 30);
+    },
+    setSubscriptionAlerts(state, action) {
+      state.subscriptionAlerts = action.payload || [];
+    },
     setTrendingArticles(state, action) {
       state.trendingArticles = action.payload;
+    },
+    hydrateSubscriptions(state, action) {
+      state.subscribedTopics = action.payload.topics || [];
+      state.subscribedCategories = action.payload.categories || [];
+    },
+    resetSubscriptions(state) {
+      state.subscribedTopics = [];
+      state.subscribedCategories = [];
+      state.subscriptionAlerts = [];
     },
     subscribeCategory(state, action) {
       const category = action.payload.toLowerCase().trim();
@@ -45,18 +65,26 @@ const newsSlice = createSlice({
     clearBreakingAlerts(state) {
       state.breakingAlerts = [];
     },
+    clearSubscriptionAlerts(state) {
+      state.subscriptionAlerts = [];
+    },
   },
 });
 
 export const {
   addLiveArticle,
   addBreakingAlert,
+  addSubscriptionAlert,
+  setSubscriptionAlerts,
   setTrendingArticles,
+  hydrateSubscriptions,
+  resetSubscriptions,
   subscribeCategory,
   unsubscribeCategory,
   subscribeTopic,
   unsubscribeTopic,
   clearBreakingAlerts,
+  clearSubscriptionAlerts,
 } = newsSlice.actions;
 
 export default newsSlice.reducer;

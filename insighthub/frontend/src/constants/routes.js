@@ -5,14 +5,14 @@ export const ROUTES = {
   SEARCH: '/search',
   TRENDING: '/trending',
   ALERTS: '/alerts',
-  PROFILE: '/profile',
-  PREFERENCES: '/preferences',
   LOGIN: '/login',
   ANALYTICS: '/analytics',
   COMPARE: '/compare',
   BRIEF: '/brief',
   LOCAL: '/local',
   SCHEMES: '/schemes',
+  PREFERENCES: '/preferences',
+  PROFILE: '/profile',
 };
 
 export function articlePath(id) {
@@ -24,7 +24,6 @@ export const NAV_ITEMS = [
   { label: 'Trending', path: ROUTES.TRENDING },
   { label: 'Search', path: ROUTES.SEARCH },
   { label: 'Alerts', path: ROUTES.ALERTS, auth: true },
-  { label: 'Profile', path: ROUTES.PROFILE, auth: true },
 ];
 
 export const SOURCE_STATUS = {

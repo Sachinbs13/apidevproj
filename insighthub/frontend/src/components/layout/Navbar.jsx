@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useSocketContext } from '../../context/SocketContext.jsx';
-import { ROUTES } from '../../constants/routes.js';
-import { clearBreakingAlerts } from '../../store/newsSlice.js';
+import { ROUTES, articlePath } from '../../constants/routes.js';
+import { clearSubscriptionAlerts } from '../../store/newsSlice.js';
+import SavedArticlesPanel from '../user/SavedArticlesPanel.jsx';
 import ThemeToggle from '../ui/ThemeToggle.jsx';
 import LanguagePicker from '../ui/LanguagePicker.jsx';
 import { cn } from '../../utils/cn.js';
@@ -15,14 +16,19 @@ function Navbar() {
   const dispatch = useDispatch();
   
   const [showNotifications, setShowNotifications] = useState(false);
-  const breakingAlerts = useSelector((state) => state.news.breakingAlerts);
+  const [showSaved, setShowSaved] = useState(false);
+  const subscriptionAlerts = useSelector((state) => state.news.subscriptionAlerts);
   const notificationRef = useRef(null);
+  const savedRef = useRef(null);
+  const alertCount = subscriptionAlerts.length;
 
-  // Close notifications panel on outside click
   useEffect(() => {
     function handleClickOutside(event) {
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
         setShowNotifications(false);
+      }
+      if (savedRef.current && !savedRef.current.contains(event.target)) {
+        setShowSaved(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -54,84 +60,127 @@ function Navbar() {
           )}
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
-          <LanguagePicker compact className="max-w-[9.5rem] shrink-0 overflow-x-auto sm:max-w-none" />
+          <LanguagePicker align="right" />
           <ThemeToggle />
           {isAuthenticated && (
-            <div className="relative" ref={notificationRef}>
-              <button
-                type="button"
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative rounded-lg border border-slate-200 bg-slate-50 p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-                </svg>
-                {breakingAlerts.length > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                  </span>
-                )}
-              </button>
+            <>
+              <div className="relative" ref={savedRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSaved((v) => !v);
+                    setShowNotifications(false);
+                  }}
+                  className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
+                  aria-label="Saved articles"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                    />
+                  </svg>
+                </button>
+                <SavedArticlesPanel open={showSaved} onClose={() => setShowSaved(false)} />
+              </div>
+
+              <div className="relative" ref={notificationRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNotifications((v) => !v);
+                    setShowSaved(false);
+                  }}
+                  className="relative rounded-lg border border-slate-200 bg-slate-50 p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
+                  aria-label="My alerts"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                  </svg>
+                  {alertCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white">
+                      {alertCount > 9 ? '9+' : alertCount}
+                    </span>
+                  )}
+                </button>
 
               {/* Notification Panel */}
               {showNotifications && (
                 <div className="absolute right-0 mt-2.5 w-80 rounded-xl border border-slate-200 bg-white p-4 shadow-2xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950">
                   <div className="mb-3 flex items-center justify-between border-b border-slate-200 pb-2 dark:border-slate-800">
                     <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      Breaking Alerts
+                      My Alerts
                     </h3>
-                    {breakingAlerts.length > 0 && (
+                    {subscriptionAlerts.length > 0 && (
                       <button
-                        onClick={() => dispatch(clearBreakingAlerts())}
-                        className="text-[10px] text-slate-500 hover:text-sky-400 transition"
+                        type="button"
+                        onClick={() => dispatch(clearSubscriptionAlerts())}
+                        className="text-[10px] text-slate-500 transition hover:text-sky-400"
                       >
                         Clear all
                       </button>
                     )}
                   </div>
-                  <div className="max-h-60 overflow-y-auto space-y-2.5 scrollbar-thin">
-                    {breakingAlerts.length === 0 ? (
+                  <div className="max-h-60 space-y-2.5 overflow-y-auto scrollbar-thin">
+                    {subscriptionAlerts.length === 0 ? (
                       <div className="py-6 text-center text-xs text-slate-500">
-                        No active breaking alerts reported.
+                        No subscription alerts yet. Set up alerts on the Alerts page.
                       </div>
                     ) : (
-                      breakingAlerts.map((alert, idx) => (
+                      subscriptionAlerts.map((alert, idx) => (
                         <div
-                          key={idx}
-                          className="space-y-1 rounded-lg border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-800/40 dark:bg-slate-900/50"
+                          key={`${alert.article?._id}-${alert.receivedAt || idx}`}
+                          className="space-y-1 rounded-lg border border-slate-200 border-l-2 border-l-amber-500 bg-slate-50 p-2.5 dark:border-slate-800/40 dark:bg-slate-900/50"
                         >
                           <div className="flex items-start justify-between gap-1">
-                            <span className="rounded border border-red-200 bg-red-50 px-1 py-0.5 text-[9px] font-bold uppercase text-red-600 dark:border-red-500/15 dark:bg-red-500/10 dark:text-red-400">
-                              BREAKING
+                            <span className="rounded border border-amber-200 bg-amber-50 px-1 py-0.5 text-[9px] font-bold uppercase text-amber-700 dark:border-amber-500/20 dark:bg-amber-950/40 dark:text-amber-300">
+                              {alert.matchLabel || 'ALERT'}
                             </span>
                             <span className="text-[9px] text-slate-500">
-                              {new Date(alert.article.publishedAt).toLocaleTimeString()}
+                              {alert.article?.publishedAt
+                                ? new Date(alert.article.publishedAt).toLocaleTimeString()
+                                : ''}
                             </span>
                           </div>
-                          <p className="line-clamp-2 text-xs font-semibold text-slate-800 dark:text-slate-200">
-                            {alert.article.title}
-                          </p>
-                          <p className="text-[10px] italic text-slate-500 dark:text-slate-400">
-                            Reason: {alert.reason}
-                          </p>
+                          {alert.article?._id ? (
+                            <Link
+                              to={articlePath(alert.article._id)}
+                              onClick={() => setShowNotifications(false)}
+                              className="line-clamp-2 text-xs font-semibold text-slate-800 hover:text-sky-600 dark:text-slate-200 dark:hover:text-sky-400"
+                            >
+                              {alert.article.title}
+                            </Link>
+                          ) : (
+                            <p className="line-clamp-2 text-xs font-semibold text-slate-800 dark:text-slate-200">
+                              {alert.article?.title}
+                            </p>
+                          )}
+                          {alert.reason && (
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400">{alert.reason}</p>
+                          )}
                         </div>
                       ))
                     )}
                   </div>
+                  <Link
+                    to={ROUTES.ALERTS}
+                    onClick={() => setShowNotifications(false)}
+                    className="mt-3 block text-center text-[11px] font-medium text-sky-600 hover:text-sky-500 dark:text-sky-400"
+                  >
+                    Manage subscriptions
+                  </Link>
                 </div>
               )}
             </div>
+            </>
           )}
 
           {isAuthenticated ? (
             <>
-              <NavLink
-                to={ROUTES.PROFILE}
-                className="hidden text-sm font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white sm:block"
-              >
+              <span className="hidden text-sm font-semibold text-slate-600 dark:text-slate-400 sm:block">
                 {user?.name}
-              </NavLink>
+              </span>
               <button
                 type="button"
                 onClick={logout}

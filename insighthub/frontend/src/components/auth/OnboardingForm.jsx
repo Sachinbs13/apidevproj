@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getInterestsForOccupation, OCCUPATIONS, LANGUAGES } from '../../constants/occupationInterests.js';
 import { INDIAN_STATES } from '../../constants/indianStates.js';
 import { cn } from '../../utils/cn.js';
+import Select from '../ui/Select.jsx';
 
 function OnboardingForm({ onComplete, onSkip, loading }) {
   const [occupation, setOccupation] = useState('General');
@@ -31,32 +32,30 @@ function OnboardingForm({ onComplete, onSkip, loading }) {
     });
   }
 
-  const inputClass =
-    'w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white outline-none focus:border-sky-600';
-
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-white">Personalize your feed</h2>
         <p className="mt-1 text-sm text-slate-400">
-          Tell us about yourself for a better news experience. You can change this anytime in Profile.
+          Tell us about yourself for a better news experience.
         </p>
       </div>
 
       <div className="space-y-4">
         <div>
           <label className="mb-1.5 block text-sm text-slate-400">Occupation</label>
-          <select
+          <Select
+            variant="dark"
             value={occupation}
             onChange={(e) => setOccupation(e.target.value)}
-            className={inputClass}
+            className="w-full"
           >
             {OCCUPATIONS.map((occ) => (
               <option key={occ} value={occ}>
                 {occ}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
@@ -83,27 +82,28 @@ function OnboardingForm({ onComplete, onSkip, loading }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1.5 block text-sm text-slate-400">State</label>
-            <select value={state} onChange={(e) => setState(e.target.value)} className={inputClass}>
+            <Select variant="dark" value={state} onChange={(e) => setState(e.target.value)} className="w-full">
               {INDIAN_STATES.map((st) => (
                 <option key={st} value={st}>
                   {st}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className="mb-1.5 block text-sm text-slate-400">Language</label>
-            <select
+            <Select
+              variant="dark"
               value={preferredLanguage}
               onChange={(e) => setPreferredLanguage(e.target.value)}
-              className={inputClass}
+              className="w-full"
             >
               {LANGUAGES.map((lang) => (
                 <option key={lang} value={lang}>
                   {lang}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </div>
       </div>

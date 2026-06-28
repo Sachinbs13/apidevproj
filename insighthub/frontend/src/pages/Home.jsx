@@ -6,6 +6,7 @@ import { useHomeFeed } from '../queries/useHomeFeed.js';
 import CategoryTabs from '../components/home/CategoryTabs.jsx';
 import TodaysBriefCard from '../components/home/TodaysBriefCard.jsx';
 import LocalNewsSection from '../components/home/LocalNewsSection.jsx';
+import GovernmentSchemesSection from '../components/home/GovernmentSchemesSection.jsx';
 import HomeFeed from '../components/home/HomeFeed.jsx';
 import { cn } from '../utils/cn.js';
 
@@ -133,6 +134,8 @@ function Home() {
         defaultState={user?.preferences?.state || 'Karnataka'}
         defaultExpanded={sectionParam === 'local'}
       />
+
+      <GovernmentSchemesSection />
 
       <HomeFeed
         articles={articles}

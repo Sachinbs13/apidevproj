@@ -99,7 +99,7 @@ Key differentiators include occupation-based **Today's Brief**, **local news** f
 - Unified article schema and deduplication
 - REST API with authentication, search, trending, analytics, and user library
 - WebSocket live feed, breaking alerts, and brief updates
-- React SPA with Home, Search, Trending, Alerts, Profile, and Article Detail
+- React SPA with Home, Search, Trending, Alerts, and Article Detail
 - Docker, CI/CD, and cloud deployment configuration
 - India-focused source configuration and regional NLP
 
@@ -219,7 +219,7 @@ The survey yielded the following conclusions that directly shaped InsightHub:
 | **O4** | Enrich articles with sentiment, category, and regional metadata | Sentiment label; auto-category; Indian state/city extraction |
 | **O5** | Expose a documented REST API | ≥15 endpoints; Swagger UI; JWT and API key auth |
 | **O6** | Deliver real-time updates via WebSockets | news, trending, breaking, brief, and source status events |
-| **O7** | Build a React dashboard for end users | Home, Search, Trending, Article Detail, Alerts, Profile |
+| **O7** | Build a React dashboard for end users | Home, Search, Trending, Article Detail, Alerts |
 | **O8** | Support India-specific intelligence features | Local news, Today's Brief, scheme detection, India RSS defaults |
 | **O9** | Deploy with Docker and CI/CD | docker-compose; GitHub Actions lint/build pipeline |
 
@@ -384,14 +384,16 @@ insighthub/frontend/src/
 │   ├── home/        # TodaysBriefCard, HomeFeed, LocalNewsSection
 │   ├── trending/    # BreakingSection, TrendingTopics, MostReadList
 │   ├── article/     # ArticleSummary, SaveButton, SourceComparison
-│   ├── profile/     # PreferencesForm, SavedList, HistoryList
+│   ├── auth/          # OnboardingForm
+│   ├── alerts/        # AlertPresets, MyAlertsFeed
+│   ├── user/          # SavedArticlesPanel
 │   ├── layout/      # Navbar, Sidebar, MobileTabBar, AppLayout
 │   └── ui/          # ArticleCard, LanguagePicker, ThemeToggle
 ├── context/         # AuthContext, SocketContext, LanguageContext
 ├── queries/         # TanStack React Query hooks
 ├── hooks/           # useTheme, useBriefSpeech, useTodayBrief
 ├── store/           # Redux auth + news slices
-├── pages/           # Home, Search, Trending, ArticlePage, Profile, Alerts
+├── pages/           # Home, Search, Trending, ArticlePage, Alerts
 └── constants/       # routes, queryKeys, indianStates, occupationInterests
 ```
 
@@ -403,8 +405,7 @@ insighthub/frontend/src/
 | `/search` | Search | Optional | Full-text search with pagination |
 | `/trending` | Trending | Optional | Breaking, topics, most read |
 | `/news/:id` | Article Detail | Optional | Full article, source comparison, save |
-| `/alerts` | Alerts | Required | Topic alert presets |
-| `/profile` | Profile | Required | Settings, saved, history |
+| `/alerts` | Alerts | Required | Filtered live topic/category subscriptions |
 | `/login` | Login | Public | Register and sign in |
 
 #### 4.3.3 State Management Design
@@ -554,7 +555,7 @@ InsightHub was developed using an **incremental, phase-based methodology** align
 | **Phase 4** | WebSockets | Live news, trending, breaking, topic subscriptions |
 | **Phase 5** | React frontend | Feed, search, trending, analytics, alerts, auth |
 | **Phase 6** | Polish & deployment | Redis, sentiment, Docker, CI/CD, cloud configs |
-| **Phase 7 (Redesign)** | India UX | Home consolidation, brief card, local news, profile, React Query, language |
+| **Phase 7 (Redesign)** | India UX | Home consolidation, brief card, local news, schemes, React Query, language, alerts |
 
 Each phase produced a working vertical slice before proceeding. Backend pipeline stability was preserved during frontend redesign — a core constraint documented in `REDESIGN.md`.
 
@@ -731,7 +732,8 @@ All primary objectives (O1–O9) were achieved. The following features are opera
 | Article cards | Image, category, regional badge, sentiment, multi-source indicator |
 | Article detail | Source comparison panel, save button, translated summary |
 | Trending | Breaking section, topic chips, most-read list |
-| Profile | Onboarding chips, preferences, saved/history tabs |
+| Alerts | Preset subscriptions, filtered live toasts, my alerts feed |
+| Saved articles | Navbar bookmark panel (auth) |
 | Mobile | Bottom tab bar; responsive navbar language picker |
 | Accessibility | Light/dark mode; semantic HTML in components |
 
@@ -933,11 +935,11 @@ Backend available at `http://localhost:5000`. Start frontend separately.
 |------|--------|-----------------|
 | 1 | Open Home | News feed loads |
 | 2 | Register / Login | JWT stored; personalized sections appear |
-| 3 | Set occupation in Profile | Today's Brief reflects occupation |
+| 3 | Set occupation at registration | Today's Brief reflects occupation |
 | 4 | Select Kannada in navbar | Article descriptions translate |
 | 5 | Open Trending | Breaking and topics visible |
 | 6 | Click article | Detail page with source comparison |
-| 7 | Save article | Appears in Profile → Saved |
+| 7 | Save article | Appears in navbar Saved panel |
 | 8 | Wait for cron fetch | New articles appear; WS toast on breaking |
 
 ---

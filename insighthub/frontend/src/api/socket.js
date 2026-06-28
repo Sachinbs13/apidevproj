@@ -45,6 +45,11 @@ export function subscribeToCategory(category) {
   socket?.emit('subscribe:topic', { category });
 }
 
+export function resubscribeAll(topics = [], categories = []) {
+  topics.forEach((topic) => subscribeToTopic(topic));
+  categories.forEach((category) => subscribeToCategory(category));
+}
+
 export function onNewsUpdate(callback) {
   socket?.on('live:news_update', callback);
   return () => socket?.off('live:news_update', callback);
@@ -78,6 +83,7 @@ export default {
   unsubscribeFromTopic,
   unsubscribeFromCategory,
   subscribeToCategory,
+  resubscribeAll,
   onNewsUpdate,
   onTrendingUpdate,
   onBreakingNews,

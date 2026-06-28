@@ -8,8 +8,10 @@ import SourceComparison from '../components/article/SourceComparison.jsx';
 import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
 import SourceBadge from '../components/ui/SourceBadge.jsx';
+import ArticleMetaTags from '../components/ui/ArticleMetaTags.jsx';
 import { ROUTES } from '../constants/routes.js';
 import { useLanguage } from '../context/LanguageContext.jsx';
+import { getPrimarySourceName, getPublisherFromSourceRef } from '../helpers/articleMeta.js';
 import { cn } from '../utils/cn.js';
 
 function ArticlePage() {
@@ -55,6 +57,8 @@ function ArticlePage() {
   const sources = article.sources || [];
   const sourceCount = article.sourceCount ?? sources.length;
   const displayTitle = isEnglish ? article.title : translation?.title || article.title;
+  const primarySource = getPrimarySourceName(article);
+  const extraSources = Math.max(0, sourceCount - 1);
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -80,17 +84,9 @@ function ArticlePage() {
 
       <header className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded bg-sky-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-sky-700 dark:bg-sky-950/80 dark:text-sky-400">
-            {article.category}
-          </span>
-          {article.regionalInfo?.state && article.regionalInfo.state !== 'National' && (
-            <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/55 dark:text-emerald-400">
-              📍 {article.regionalInfo.state}
-              {article.regionalInfo.city && ` • ${article.regionalInfo.city}`}
-            </span>
-          )}
+          <ArticleMetaTags article={article} />
           {sourceCount > 1 && (
-            <span className="rounded-full bg-violet-100 px-2.5 py-0.5 text-[10px] font-bold text-violet-700 dark:bg-violet-950/50 dark:text-violet-400">
+            <span className="rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-800 dark:border-violet-500/20 dark:bg-violet-950/40 dark:text-violet-300">
               {sourceCount} sources
             </span>
           )}
@@ -111,17 +107,31 @@ function ArticlePage() {
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-500">
           <span>{new Date(article.publishedAt).toLocaleString()}</span>
-          {article.sentiment?.label && article.sentiment.label !== 'neutral' && (
-            <span
-              className={cn(
-                'capitalize font-semibold',
-                article.sentiment.label === 'positive'
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-rose-600 dark:text-rose-400',
+          {primarySource && (
+            <>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <SourceBadge name={primarySource} />
+              {extraSources > 0 && (
+                <span className="text-xs font-medium text-sky-600 dark:text-sky-400">
+                  +{extraSources} more
+                </span>
               )}
-            >
-              {article.sentiment.label}
-            </span>
+            </>
+          )}
+          {article.sentiment?.label && article.sentiment.label !== 'neutral' && (
+            <>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <span
+                className={cn(
+                  'capitalize font-semibold',
+                  article.sentiment.label === 'positive'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-rose-600 dark:text-rose-400',
+                )}
+              >
+                {article.sentiment.label}
+              </span>
+            </>
           )}
         </div>
 
@@ -139,10 +149,13 @@ function ArticlePage() {
           )}
         </div>
 
-        {sources.length > 0 && (
+        {extraSources > 0 && sources.length > 1 && (
           <div className="flex flex-wrap gap-1.5">
-            {sources.map((ref, index) => (
-              <SourceBadge key={`${ref.sourceName}-${index}`} name={ref.sourceName} />
+            {sources.slice(1).map((ref, index) => (
+              <SourceBadge
+                key={`${ref.sourceName}-${index}`}
+                name={getPublisherFromSourceRef(article, ref)}
+              />
             ))}
           </div>
         )}
