@@ -130,6 +130,10 @@ WebSocket events: `live:news_update`, `live:trending`, `live:breaking`, `live:so
 
 Full reference: [`project-steps.md`](project-steps.md)
 
+## Roadmap
+
+See [`ROADMAP.md`](ROADMAP.md) for planned improvements, technical debt, and future feature ideas.
+
 ## Deployment
 
 | Service | Platform | Config |
