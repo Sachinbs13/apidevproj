@@ -1,5 +1,7 @@
 # InsightHub
 
+**Co-authored by Sachin**
+
 Multi-API news analytics platform that aggregates headlines from several external sources, deduplicates overlapping stories, and exposes them through a REST API, WebSocket live feed, and React dashboard.
 
 Built as a MERN-stack portfolio project with production-oriented patterns: caching, Docker, CI/CD, and deployment configs.
