@@ -35,17 +35,16 @@ function OnboardingForm({ onComplete, onSkip, loading }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-white">Personalize your feed</h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Personalize your feed</h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Tell us about yourself for a better news experience.
         </p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="mb-1.5 block text-sm text-slate-400">Occupation</label>
+          <label className="mb-1.5 block text-sm text-slate-600 dark:text-slate-400">Occupation</label>
           <Select
-            variant="dark"
             value={occupation}
             onChange={(e) => setOccupation(e.target.value)}
             className="w-full"
@@ -59,7 +58,7 @@ function OnboardingForm({ onComplete, onSkip, loading }) {
         </div>
 
         <div>
-          <label className="mb-2 block text-sm text-slate-400">Interests</label>
+          <label className="mb-2 block text-sm text-slate-600 dark:text-slate-400">Interests</label>
           <div className="flex flex-wrap gap-2">
             {getInterestsForOccupation(occupation).map((topic) => (
               <button
@@ -70,7 +69,7 @@ function OnboardingForm({ onComplete, onSkip, loading }) {
                   'rounded-full px-3 py-1 text-xs capitalize transition',
                   interests.includes(topic)
                     ? 'bg-sky-600 text-white'
-                    : 'border border-slate-700 text-slate-400 hover:text-white',
+                    : 'border border-slate-300 text-slate-600 hover:border-sky-400 hover:text-sky-600 dark:border-slate-700 dark:text-slate-400 dark:hover:text-white',
                 )}
               >
                 {topic}
@@ -81,8 +80,8 @@ function OnboardingForm({ onComplete, onSkip, loading }) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-sm text-slate-400">State</label>
-            <Select variant="dark" value={state} onChange={(e) => setState(e.target.value)} className="w-full">
+            <label className="mb-1.5 block text-sm text-slate-600 dark:text-slate-400">State</label>
+            <Select value={state} onChange={(e) => setState(e.target.value)} className="w-full">
               {INDIAN_STATES.map((st) => (
                 <option key={st} value={st}>
                   {st}
@@ -91,9 +90,8 @@ function OnboardingForm({ onComplete, onSkip, loading }) {
             </Select>
           </div>
           <div>
-            <label className="mb-1.5 block text-sm text-slate-400">Language</label>
+            <label className="mb-1.5 block text-sm text-slate-600 dark:text-slate-400">Language</label>
             <Select
-              variant="dark"
               value={preferredLanguage}
               onChange={(e) => setPreferredLanguage(e.target.value)}
               className="w-full"
@@ -120,7 +118,7 @@ function OnboardingForm({ onComplete, onSkip, loading }) {
           type="button"
           onClick={onSkip}
           disabled={loading}
-          className="rounded-lg border border-slate-700 px-4 py-2.5 text-sm text-slate-400 transition hover:text-white disabled:opacity-50"
+          className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-600 transition hover:border-sky-400 hover:text-sky-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400 dark:hover:text-white"
         >
           Skip for now
         </button>
